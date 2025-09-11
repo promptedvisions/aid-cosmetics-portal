@@ -1,0 +1,1276 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AID COSMETICS - מערכת מעקב הגשות רגולטוריות</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #16a085;
+            --light-bg: #f8f9fa;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .dashboard-container {
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 20px 0;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .status-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-right: 5px solid;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .status-card:hover {
+            transform: translateX(-5px);
+        }
+
+        .status-card.pending {
+            border-color: var(--warning-color);
+        }
+
+        .status-card.in-progress {
+            border-color: var(--info-color);
+        }
+
+        .status-card.completed {
+            border-color: var(--success-color);
+        }
+
+        .status-card.rejected {
+            border-color: var(--danger-color);
+        }
+
+        .timeline {
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            right: 30px;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(180deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-right: 60px;
+            margin-bottom: 30px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            right: 24px;
+            top: 5px;
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid var(--secondary-color);
+            z-index: 1;
+        }
+
+        .timeline-item.completed::before {
+            background: var(--success-color);
+            border-color: var(--success-color);
+        }
+
+        .timeline-item.active::before {
+            background: var(--warning-color);
+            border-color: var(--warning-color);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(243, 156, 18, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(243, 156, 18, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(243, 156, 18, 0);
+            }
+        }
+
+        .progress-circle {
+            width: 120px;
+            height: 120px;
+            position: relative;
+            margin: 0 auto;
+        }
+
+        .progress-circle svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-circle .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .document-upload-area {
+            border: 2px dashed var(--secondary-color);
+            border-radius: 10px;
+            padding: 30px;
+            text-align: center;
+            background: var(--light-bg);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .document-upload-area:hover {
+            background: #e3f2fd;
+            border-color: var(--primary-color);
+        }
+
+        .document-upload-area.dragover {
+            background: #bbdefb;
+            border-color: var(--primary-color);
+        }
+
+        .checklist-item {
+            padding: 10px 15px;
+            margin: 5px 0;
+            background: var(--light-bg);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            transition: all 0.3s ease;
+        }
+
+        .checklist-item:hover {
+            background: #e8f5e9;
+        }
+
+        .checklist-item.completed {
+            background: #c8e6c9;
+        }
+
+        .checklist-item input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+
+        .alert-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1050;
+            min-width: 300px;
+            animation: slideDown 0.5s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                transform: translateX(-50%) translateY(-100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(-50%) translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--light-bg) 0%, white 100%);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .metric-card .metric-value {
+            font-size: 36px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .metric-card .metric-label {
+            color: #666;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        .submission-form {
+            background: white;
+            border-radius: 10px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .form-section {
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .form-section:last-child {
+            border-bottom: none;
+        }
+
+        .form-section h5 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+
+        .deadline-indicator {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .deadline-indicator.urgent {
+            background: #ffebee;
+            color: var(--danger-color);
+        }
+
+        .deadline-indicator.warning {
+            background: #fff3cd;
+            color: var(--warning-color);
+        }
+
+        .deadline-indicator.safe {
+            background: #e8f5e9;
+            color: var(--success-color);
+        }
+
+        .nav-tabs .nav-link {
+            color: var(--primary-color);
+            border: none;
+            background: var(--light-bg);
+            margin: 0 5px;
+            border-radius: 10px 10px 0 0;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs .nav-link:hover {
+            background: #e0e0e0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: white;
+            color: var(--primary-color);
+            font-weight: 600;
+        }
+
+        .tab-content {
+            background: white;
+            padding: 20px;
+            border-radius: 0 10px 10px 10px;
+        }
+
+        .authority-badge {
+            display: inline-block;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin: 2px;
+        }
+
+        .authority-badge.moh {
+            background: #e3f2fd;
+            color: #1565c0;
+        }
+
+        .authority-badge.fire {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .authority-badge.environment {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .authority-badge.business {
+            background: #fce4ec;
+            color: #ad1457;
+        }
+
+        .document-status-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .document-status-table th {
+            background: var(--primary-color);
+            color: white;
+            padding: 12px;
+            font-weight: 600;
+            border: none;
+        }
+
+        .document-status-table td {
+            padding: 10px 12px;
+            vertical-align: middle;
+        }
+
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .status-badge.draft {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .status-badge.ready {
+            background: #e8f5e9;
+            color: var(--success-color);
+        }
+
+        .status-badge.submitted {
+            background: #e3f2fd;
+            color: var(--info-color);
+        }
+
+        .status-badge.approved {
+            background: #c8e6c9;
+            color: #1b5e20;
+        }
+
+        .status-badge.rejected {
+            background: #ffebee;
+            color: var(--danger-color);
+        }
+
+        .action-button {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0 2px;
+        }
+
+        .action-button.view {
+            background: var(--info-color);
+            color: white;
+        }
+
+        .action-button.edit {
+            background: var(--warning-color);
+            color: white;
+        }
+
+        .action-button.download {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .action-button:hover {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="bi bi-clipboard-check"></i> מערכת מעקב הגשות רגולטוריות
+                    </h1>
+                    <p class="mb-0 mt-2">AID COSMETICS - ניהול תהליכי אישור משרד הבריאות</p>
+                </div>
+                <div class="col-md-4 text-start">
+                    <button class="btn btn-light" onclick="window.location.href='index.html'">
+                        <i class="bi bi-house"></i> חזרה לפורטל הראשי
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard -->
+    <div class="container mt-4">
+        <!-- Metrics Dashboard -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-file-earmark-text" style="font-size: 30px; color: var(--secondary-color);"></i>
+                    <div class="metric-value">24</div>
+                    <div class="metric-label">סה"כ מסמכים</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-check-circle" style="font-size: 30px; color: var(--success-color);"></i>
+                    <div class="metric-value">8</div>
+                    <div class="metric-label">מסמכים מאושרים</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-clock-history" style="font-size: 30px; color: var(--warning-color);"></i>
+                    <div class="metric-value">12</div>
+                    <div class="metric-label">ממתינים לטיפול</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card">
+                    <i class="bi bi-calendar-check" style="font-size: 30px; color: var(--info-color);"></i>
+                    <div class="metric-value">45</div>
+                    <div class="metric-label">ימים עד הגשה</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <ul class="nav nav-tabs" id="submissionTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="timeline-tab" data-bs-toggle="tab" data-bs-target="#timeline" type="button">
+                    <i class="bi bi-calendar3"></i> ציר זמן
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="documents-tab" data-bs-toggle="tab" data-bs-target="#documents" type="button">
+                    <i class="bi bi-folder2-open"></i> מסמכים
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="forms-tab" data-bs-toggle="tab" data-bs-target="#forms" type="button">
+                    <i class="bi bi-ui-checks"></i> טפסים
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="checklist-tab" data-bs-toggle="tab" data-bs-target="#checklist" type="button">
+                    <i class="bi bi-list-check"></i> רשימת תיוג
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="correspondence-tab" data-bs-toggle="tab" data-bs-target="#correspondence" type="button">
+                    <i class="bi bi-envelope"></i> התכתבויות
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="alerts-tab" data-bs-toggle="tab" data-bs-target="#alerts" type="button">
+                    <i class="bi bi-bell"></i> התראות
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="submissionTabContent">
+            <!-- Timeline Tab -->
+            <div class="tab-pane fade show active" id="timeline" role="tabpanel">
+                <div class="dashboard-container">
+                    <h4 class="mb-4">תהליך ההגשה - 7 שלבים</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <div class="timeline">
+                                <div class="timeline-item completed">
+                                    <div class="status-card completed">
+                                        <h5><i class="bi bi-check-circle"></i> שלב 1: הכנת תיעוד ראשוני</h5>
+                                        <p>הושלם בתאריך: 15/01/2024</p>
+                                        <ul>
+                                            <li>תיק טכני - 13 פרקים</li>
+                                            <li>Site Master File</li>
+                                            <li>נהלי ISO 22716</li>
+                                        </ul>
+                                        <span class="deadline-indicator safe">הושלם בזמן</span>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item active">
+                                    <div class="status-card in-progress">
+                                        <h5><i class="bi bi-arrow-repeat"></i> שלב 2: פגישת תיאום עם משרד הבריאות</h5>
+                                        <p>יעד השלמה: 01/02/2024</p>
+                                        <div class="progress mb-2">
+                                            <div class="progress-bar bg-info" style="width: 60%">60%</div>
+                                        </div>
+                                        <ul>
+                                            <li>קביעת פגישה - הושלם</li>
+                                            <li>הכנת מצגת - בתהליך</li>
+                                            <li>איסוף שאלות מקדימות - ממתין</li>
+                                        </ul>
+                                        <span class="deadline-indicator warning">נותרו 7 ימים</span>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="status-card pending">
+                                        <h5><i class="bi bi-circle"></i> שלב 3: הגשת בקשה רשמית</h5>
+                                        <p>יעד השלמה: 15/02/2024</p>
+                                        <ul>
+                                            <li>טופס בקשה לרישיון ייצור</li>
+                                            <li>תשלום אגרות</li>
+                                            <li>הגשת תיק מלא</li>
+                                        </ul>
+                                        <span class="deadline-indicator safe">נותרו 21 ימים</span>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="status-card pending">
+                                        <h5><i class="bi bi-circle"></i> שלב 4: ביצוע התאמות פיזיות</h5>
+                                        <p>יעד השלמה: 01/06/2024</p>
+                                        <ul>
+                                            <li>שדרוג מערכת HVAC</li>
+                                            <li>התקנת ציוד חדש</li>
+                                            <li>התאמת חדרים נקיים</li>
+                                        </ul>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="status-card pending">
+                                        <h5><i class="bi bi-circle"></i> שלב 5: ביקורת מקדימה</h5>
+                                        <p>יעד השלמה: 01/07/2024</p>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="status-card pending">
+                                        <h5><i class="bi bi-circle"></i> שלב 6: תיקון ליקויים</h5>
+                                        <p>יעד השלמה: 01/08/2024</p>
+                                    </div>
+                                </div>
+
+                                <div class="timeline-item">
+                                    <div class="status-card pending">
+                                        <h5><i class="bi bi-circle"></i> שלב 7: ביקורת סופית ואישור</h5>
+                                        <p>יעד השלמה: 01/09/2024</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <div class="dashboard-container">
+                                <h5>התקדמות כללית</h5>
+                                <div class="progress-circle">
+                                    <svg width="120" height="120">
+                                        <circle cx="60" cy="60" r="50" stroke="#e0e0e0" stroke-width="10" fill="none"/>
+                                        <circle cx="60" cy="60" r="50" stroke="#3498db" stroke-width="10" fill="none"
+                                                stroke-dasharray="314" stroke-dashoffset="235" stroke-linecap="round"/>
+                                    </svg>
+                                    <div class="progress-text">25%</div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <h6>רשויות מעורבות</h6>
+                                    <div class="authority-badge moh">משרד הבריאות</div>
+                                    <div class="authority-badge fire">כיבוי אש</div>
+                                    <div class="authority-badge environment">איכות הסביבה</div>
+                                    <div class="authority-badge business">רישוי עסקים</div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <h6>תאריכי יעד קרובים</h6>
+                                    <div class="list-group">
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>פגישת תיאום</span>
+                                                <span class="text-danger">01/02/2024</span>
+                                            </div>
+                                        </div>
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>הגשת בקשה</span>
+                                                <span class="text-warning">15/02/2024</span>
+                                            </div>
+                                        </div>
+                                        <div class="list-group-item">
+                                            <div class="d-flex justify-content-between">
+                                                <span>תחילת שיפוצים</span>
+                                                <span>01/03/2024</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Documents Tab -->
+            <div class="tab-pane fade" id="documents" role="tabpanel">
+                <div class="dashboard-container">
+                    <h4 class="mb-4">ניהול מסמכים</h4>
+                    
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <input type="text" class="form-control" placeholder="חיפוש מסמכים..." id="documentSearch">
+                        </div>
+                        <div class="col-md-4">
+                            <button class="btn btn-primary w-100" onclick="openDocumentUpload()">
+                                <i class="bi bi-cloud-upload"></i> העלאת מסמך חדש
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="document-status-table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>שם המסמך</th>
+                                    <th>סוג</th>
+                                    <th>רשות</th>
+                                    <th>סטטוס</th>
+                                    <th>תאריך עדכון</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><i class="bi bi-file-pdf text-danger"></i> תיק טכני מלא</td>
+                                    <td>תיעוד טכני</td>
+                                    <td><span class="authority-badge moh">משרד הבריאות</span></td>
+                                    <td><span class="status-badge approved">מאושר</span></td>
+                                    <td>15/01/2024</td>
+                                    <td>
+                                        <button class="action-button view"><i class="bi bi-eye"></i></button>
+                                        <button class="action-button download"><i class="bi bi-download"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-file-word text-primary"></i> Site Master File</td>
+                                    <td>SMF</td>
+                                    <td><span class="authority-badge moh">משרד הבריאות</span></td>
+                                    <td><span class="status-badge submitted">הוגש</span></td>
+                                    <td>20/01/2024</td>
+                                    <td>
+                                        <button class="action-button view"><i class="bi bi-eye"></i></button>
+                                        <button class="action-button edit"><i class="bi bi-pencil"></i></button>
+                                        <button class="action-button download"><i class="bi bi-download"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-file-earmark-excel text-success"></i> נהלי ISO 22716</td>
+                                    <td>נהלי איכות</td>
+                                    <td><span class="authority-badge moh">משרד הבריאות</span></td>
+                                    <td><span class="status-badge ready">מוכן להגשה</span></td>
+                                    <td>22/01/2024</td>
+                                    <td>
+                                        <button class="action-button view"><i class="bi bi-eye"></i></button>
+                                        <button class="action-button edit"><i class="bi bi-pencil"></i></button>
+                                        <button class="action-button download"><i class="bi bi-download"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-file-pdf text-danger"></i> תוכנית בטיחות אש</td>
+                                    <td>בטיחות</td>
+                                    <td><span class="authority-badge fire">כיבוי אש</span></td>
+                                    <td><span class="status-badge draft">טיוטה</span></td>
+                                    <td>18/01/2024</td>
+                                    <td>
+                                        <button class="action-button view"><i class="bi bi-eye"></i></button>
+                                        <button class="action-button edit"><i class="bi bi-pencil"></i></button>
+                                        <button class="action-button download"><i class="bi bi-download"></i></button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><i class="bi bi-file-pdf text-danger"></i> סקר סביבתי</td>
+                                    <td>איכות סביבה</td>
+                                    <td><span class="authority-badge environment">איכות הסביבה</span></td>
+                                    <td><span class="status-badge draft">טיוטה</span></td>
+                                    <td>17/01/2024</td>
+                                    <td>
+                                        <button class="action-button view"><i class="bi bi-eye"></i></button>
+                                        <button class="action-button edit"><i class="bi bi-pencil"></i></button>
+                                        <button class="action-button download"><i class="bi bi-download"></i></button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4">
+                        <div class="document-upload-area" id="uploadArea" onclick="triggerFileUpload()">
+                            <i class="bi bi-cloud-upload" style="font-size: 48px; color: var(--secondary-color);"></i>
+                            <h5 class="mt-3">גרור קבצים לכאן או לחץ לבחירה</h5>
+                            <p class="text-muted">PDF, DOC, DOCX, XLS, XLSX - עד 10MB</p>
+                            <input type="file" id="fileInput" hidden multiple accept=".pdf,.doc,.docx,.xls,.xlsx">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Forms Tab -->
+            <div class="tab-pane fade" id="forms" role="tabpanel">
+                <div class="dashboard-container">
+                    <h4 class="mb-4">טפסי משרד הבריאות</h4>
+                    
+                    <div class="submission-form">
+                        <form id="mohSubmissionForm">
+                            <div class="form-section">
+                                <h5><i class="bi bi-building"></i> פרטי המפעל</h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">שם החברה</label>
+                                        <input type="text" class="form-control" value="AID COSMETICS בע״מ" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ח.פ.</label>
+                                        <input type="text" class="form-control" value="515555555" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12 mb-3">
+                                        <label class="form-label">כתובת המפעל</label>
+                                        <input type="text" class="form-control" value="רחוב התעשייה 15, אזור התעשייה הצפוני, לוד" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">טלפון</label>
+                                        <input type="tel" class="form-control" value="08-9255555" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">דוא"ל</label>
+                                        <input type="email" class="form-control" value="info@aidcosmetics.co.il" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h5><i class="bi bi-person-badge"></i> איש קשר מקצועי</h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">שם מלא</label>
+                                        <input type="text" class="form-control" value="ד״ר אייל כהן" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">תפקיד</label>
+                                        <input type="text" class="form-control" value="מנהל איכות ורגולציה" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">השכלה</label>
+                                        <input type="text" class="form-control" value="דוקטור לכימיה" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">ניסיון בתחום</label>
+                                        <input type="text" class="form-control" value="15 שנים" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h5><i class="bi bi-box-seam"></i> קטגוריות מוצרים מבוקשות</h5>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="cat1" checked>
+                                    <label class="form-check-label" for="cat1">
+                                        קרמים ותחליבים לטיפוח העור
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="cat2" checked>
+                                    <label class="form-check-label" for="cat2">
+                                        סרומים וטיפולים מרוכזים
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="cat3" checked>
+                                    <label class="form-check-label" for="cat3">
+                                        מוצרי הגנה מהשמש
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="cat4">
+                                    <label class="form-check-label" for="cat4">
+                                        מוצרי איפור
+                                    </label>
+                                </div>
+                                <div class="form-check mb-2">
+                                    <input class="form-check-input" type="checkbox" id="cat5">
+                                    <label class="form-check-label" for="cat5">
+                                        מוצרי טיפוח לשיער
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="form-section">
+                                <h5><i class="bi bi-gear"></i> יכולות ייצור</h5>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">כושר ייצור שנתי (טון)</label>
+                                        <input type="number" class="form-control" value="500" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">מספר קווי ייצור</label>
+                                        <input type="number" class="form-control" value="3" required>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">שטח ייצור (מ״ר)</label>
+                                        <input type="number" class="form-control" value="220" required>
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label class="form-label">מספר עובדי ייצור</label>
+                                        <input type="number" class="form-control" value="25" required>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-end">
+                                <button type="button" class="btn btn-secondary me-2" onclick="saveDraft()">
+                                    <i class="bi bi-save"></i> שמור כטיוטה
+                                </button>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="bi bi-send"></i> הגש למשרד הבריאות
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Checklist Tab -->
+            <div class="tab-pane fade" id="checklist" role="tabpanel">
+                <div class="dashboard-container">
+                    <h4 class="mb-4">רשימת תיוג - מסמכים נדרשים</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">משרד הבריאות</h5>
+                            <div class="checklist-item completed">
+                                <input type="checkbox" checked onchange="updateChecklist(this)">
+                                <span>תיק טכני מלא (13 פרקים)</span>
+                            </div>
+                            <div class="checklist-item completed">
+                                <input type="checkbox" checked onchange="updateChecklist(this)">
+                                <span>Site Master File (SMF)</span>
+                            </div>
+                            <div class="checklist-item completed">
+                                <input type="checkbox" checked onchange="updateChecklist(this)">
+                                <span>נהלי איכות ISO 22716</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תיקי מוצר (PIF) - 3 דוגמאות</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תעודות השכלה - צוות מקצועי</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>פרוטוקולי תיקוף ציוד</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תוכנית הדרכות שנתית</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>נוהל ניהול תלונות וריקולים</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="mb-3">רישוי עסקים</h5>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>טופס בקשה לרישיון עסק</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תוכנית עסקית</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>חוזה שכירות / בעלות</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>אישור כיבוי אש</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>אישור משרד הבריאות</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>אישור איכות הסביבה</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תוכנית אדריכלית מאושרת</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>ביטוחים תקפים</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <h5 class="mb-3">כיבוי אש</h5>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תוכנית בטיחות אש</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>מפרט מערכות כיבוי</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תוכנית פינוי</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>אישור בדיקת מערכות</span>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h5 class="mb-3">איכות הסביבה</h5>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>סקר סביבתי</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תוכנית ניהול פסולת</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>היתר הזרמת שפכים</span>
+                            </div>
+                            <div class="checklist-item">
+                                <input type="checkbox" onchange="updateChecklist(this)">
+                                <span>תוכנית חירום סביבתית</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center">
+                        <div class="progress" style="height: 30px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 30%" id="checklistProgress">
+                                30% הושלם
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mt-3" onclick="generateChecklistReport()">
+                            <i class="bi bi-file-pdf"></i> הפק דוח רשימת תיוג
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Correspondence Tab -->
+            <div class="tab-pane fade" id="correspondence" role="tabpanel">
+                <div class="dashboard-container">
+                    <h4 class="mb-4">תבניות התכתבויות רשמיות</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="list-group">
+                                <button class="list-group-item list-group-item-action active" onclick="loadTemplate('moh-initial')">
+                                    בקשה ראשונית למשרד הבריאות
+                                </button>
+                                <button class="list-group-item list-group-item-action" onclick="loadTemplate('moh-response')">
+                                    מענה להערות משרד הבריאות
+                                </button>
+                                <button class="list-group-item list-group-item-action" onclick="loadTemplate('fire-request')">
+                                    בקשה לאישור כיבוי אש
+                                </button>
+                                <button class="list-group-item list-group-item-action" onclick="loadTemplate('env-permit')">
+                                    בקשה להיתר סביבתי
+                                </button>
+                                <button class="list-group-item list-group-item-action" onclick="loadTemplate('business-license')">
+                                    בקשה לרישיון עסק
+                                </button>
+                                <button class="list-group-item list-group-item-action" onclick="loadTemplate('update-notification')">
+                                    הודעה על שינויים במפעל
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-8">
+                            <div class="submission-form">
+                                <h5>תבנית: בקשה ראשונית למשרד הבריאות</h5>
+                                <form>
+                                    <div class="mb-3">
+                                        <label class="form-label">תאריך</label>
+                                        <input type="date" class="form-control" value="2024-01-25">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">אל</label>
+                                        <input type="text" class="form-control" value="אגף הרוקחות, משרד הבריאות">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">הנדון</label>
+                                        <input type="text" class="form-control" value="בקשה לרישיון ייצור תכשירים קוסמטיים - AID COSMETICS בע״מ">
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">תוכן המכתב</label>
+                                        <textarea class="form-control" rows="15">
+לכבוד
+אגף הרוקחות
+משרד הבריאות
+ירושלים
+
+א.ג.נ.,
+
+הנדון: בקשה לרישיון ייצור תכשירים קוסמטיים - AID COSMETICS בע״מ
+
+אנו מתכבדים להגיש בקשה לקבלת רישיון ייצור תכשירים קוסמטיים עבור מפעלנו הממוקם ברחוב התעשייה 15, אזור התעשייה הצפוני, לוד.
+
+רקע:
+חברת AID COSMETICS בע״מ הינה חברה המתמחה בפיתוח וייצור תכשירים קוסמטיים איכותיים. המפעל עובר כעת תהליך המרה מקיף ממתקן ייצור קנאביס רפואי (בעל רישיון IMC-GMP) למפעל קוסמטיקה העומד בדרישות תקן ISO 22716.
+
+המסמכים המצורפים:
+1. תיק טכני מלא - 13 פרקים
+2. Site Master File (SMF)
+3. נהלי איכות ISO 22716
+4. תוכניות אדריכליות של המפעל
+5. רשימת ציוד ומכונות
+6. קורות חיים של הצוות המקצועי
+7. תעודות השכלה רלוונטיות
+
+יכולות הייצור:
+- שטח כולל: 750 מ״ר
+- שטח חדרים נקיים: 220 מ״ר
+- כושר ייצור שנתי: 500 טון
+- קווי ייצור: 3 קווים מודרניים
+- סיווג חדרים: Class D (ISO 8) באזורי הייצור
+
+אנו מבקשים לתאם פגישת היכרות והצגת התוכנית המפורטת להמרת המפעל.
+
+נשמח לעמוד לרשותכם לכל שאלה או הבהרה נוספת.
+
+בכבוד רב,
+ד״ר אייל כהן
+מנהל איכות ורגולציה
+AID COSMETICS בע״מ
+
+טלפון: 08-9255555
+דוא״ל: regulatory@aidcosmetics.co.il</textarea>
+                                    </div>
+                                    
+                                    <div class="text-end">
+                                        <button type="button" class="btn btn-secondary me-2" onclick="saveCorrespondence()">
+                                            <i class="bi bi-save"></i> שמור
+                                        </button>
+                                        <button type="button" class="btn btn-primary" onclick="exportCorrespondence()">
+                                            <i class="bi bi-file-word"></i> ייצא ל-Word
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Alerts Tab -->
+            <div class="tab-pane fade" id="alerts" role="tabpanel">
+                <div class="dashboard-container">
+                    <h4 class="mb-4">התראות ותזכורות</h4>
+                    
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5>התראות פעילות</h5>
+                            
+                            <div class="alert alert-danger d-flex align-items-center" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                                <div>
+                                    <strong>דחוף!</strong> פגישת תיאום עם משרד הבריאות בעוד 7 ימים (01/02/2024)
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-warning d-flex align-items-center" role="alert">
+                                <i class="bi bi-clock-fill me-2"></i>
+                                <div>
+                                    <strong>תזכורת:</strong> יש להשלים הכנת מצגת לפגישה עד 28/01/2024
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info d-flex align-items-center" role="alert">
+                                <i class="bi bi-info-circle-fill me-2"></i>
+                                <div>
+                                    <strong>עדכון:</strong> נהלי ISO 22716 עודכנו בהצלחה - נדרשת חתימה דיגיטלית
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-success d-flex align-items-center" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i>
+                                <div>
+                                    <strong>הושלם:</strong> תיק טכני אושר על ידי היועץ החיצוני
+                                </div>
+                            </div>
+
+                            <h5 class="mt-4">היסטוריית התראות</h5>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>תאריך</th>
+                                            <th>סוג</th>
+                                            <th>תיאור</th>
+                                            <th>סטטוס</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>20/01/2024</td>
+                                            <td><span class="badge bg-success">הושלם</span></td>
+                                            <td>Site Master File הוגש למשרד הבריאות</td>
+                                            <td>נקרא</td>
+                                        </tr>
+                                        <tr>
+                                            <td>18/01/2024</td>
+                                            <td><span class="badge bg-info">מידע</span></td>
+                                            <td>עדכון גרסה לנהלי איכות</td>
+                                            <td>נקרא</td>
+                                        </tr>
+                                        <tr>
+                                            <td>15/01/2024</td>
+                                            <td><span class="badge bg-warning">תזכורת</span></td>
+                                            <td>מועד הגשת תיק טכני</td>
+                                            <td>נקרא</td>
+                                        </tr>
+                                        <tr>
+                                            <td>10/01/2024</td>
+                                            <td><span class="badge bg-danger">דחוף</span></td>
+                                            <td>חסרים מסמכים לתיק טכני</td>
+                                            <td>טופל</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <h5>הגדרות התראות</h5>
+                            <div class="submission-form">
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="emailAlerts" checked>
+                                    <label class="form-check-label" for="emailAlerts">
+                                        התראות בדוא"ל
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="smsAlerts">
+                                    <label class="form-check-label" for="smsAlerts">
+                                        התראות SMS
+                                    </label>
+                                </div>
+                                
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" id="browserAlerts" checked>
+                                    <label class="form-check-label" for="browserAlerts">
+                                        התראות בדפדפן
+                                    </label>
+                                </div>
+                                
+                                <hr>
+                                
+                                <h6>תזמון התראות</h6>
+                                <div class="mb-3">
+                                    <label class="form-label">התראה מוקדמת (ימים)</label>
+                                    <select class="form-select">
+                                        <option value="1">יום אחד</option>
+                                        <option value="3">3 ימים</option>
+                                        <option value="7" selected>שבוע</option>
+                                        <option value="14">שבועיים</option>
+                                        <option value="30">חודש</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">תדירות תזכורות</label>
+                                    <select class="form-select">
+                                        <option value="daily">יומי</option>
+                                        <option value="weekly" selected>שבועי</option>
+                                        <option value="monthly">חודשי</option>
+                                    </select>
+                                </div>
+                                
+                                <button class="btn btn-primary w-100">
+                                    <i class="bi bi-save"></i> שמור הגדרות
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4 bg-dark text-white">
+        <div class="container text-center">
+            <p class="mb-0">&copy; 2024 AID COSMETICS - מערכת מעקב הגשות רגולטוריות</p>
+            <p class="mb-0 mt-2">
+                <small>ניהול תהליכי אישור משרד הבריאות לייצור קוסמטיקה</small>
+            </p>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="submission-tracker.js"></script>
+</body>
+</html>
