@@ -619,109 +619,216 @@
                 <!-- Timeline Section -->
                 <section id="timeline" class="dashboard-card">
                     <h3 class="mb-4">
-                        <i class="bi bi-calendar"></i> לוח זמנים מפורט
+                        <i class="bi bi-calendar"></i> משימות ואבני דרך
                     </h3>
+                    
+                    <div class="alert alert-info mb-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>הערה:</strong> לוחות זמנים מפורטים ייקבעו בהמשך בהתאם להתקדמות והמצב בשטח
+                    </div>
                     
                     <div class="table-responsive">
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th>חודש</th>
+                                    <th>שלב</th>
                                     <th>פעילות</th>
-                                    <th>אבני דרך</th>
+                                    <th>משימות עיקריות</th>
+                                    <th>סטטוס</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><strong>חודשים 1-3</strong></td>
+                                    <td><strong>שלב א'</strong></td>
                                     <td>תכנון ותיעוד</td>
                                     <td>
                                         <ul class="mb-0">
                                             <li>השלמת תיק טכני</li>
                                             <li>הכנת SMF</li>
                                             <li>כתיבת נהלי איכות</li>
+                                            <li>תכנון תשתיות</li>
                                         </ul>
                                     </td>
+                                    <td><span class="badge bg-warning">בתכנון</span></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>חודשים 4-6</strong></td>
+                                    <td><strong>שלב ב'</strong></td>
                                     <td>התאמות פיזיות</td>
                                     <td>
                                         <ul class="mb-0">
                                             <li>שדרוג מערכת HVAC</li>
                                             <li>התקנת ציוד חדש</li>
                                             <li>התאמת חדרים נקיים</li>
+                                            <li>התקנת מערכות בקרה</li>
                                         </ul>
                                     </td>
+                                    <td><span class="badge bg-secondary">ממתין</span></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>חודשים 7-9</strong></td>
+                                    <td><strong>שלב ג'</strong></td>
                                     <td>תיקוף והסמכה</td>
                                     <td>
                                         <ul class="mb-0">
                                             <li>תיקוף ציוד (IQ/OQ)</li>
                                             <li>תיקוף תהליכים (PQ)</li>
                                             <li>הדרכות צוות</li>
+                                            <li>בדיקות איכות</li>
                                         </ul>
                                     </td>
+                                    <td><span class="badge bg-secondary">ממתין</span></td>
                                 </tr>
                                 <tr>
-                                    <td><strong>חודשים 10-12</strong></td>
+                                    <td><strong>שלב ד'</strong></td>
                                     <td>אישורים והשקה</td>
                                     <td>
                                         <ul class="mb-0">
                                             <li>ביקורת משרד הבריאות</li>
                                             <li>קבלת רישיון ייצור</li>
                                             <li>התחלת ייצור</li>
+                                            <li>ניטור ובקרה</li>
                                         </ul>
                                     </td>
+                                    <td><span class="badge bg-secondary">ממתין</span></td>
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+                    
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h5><i class="bi bi-clock"></i> עדכון לוחות זמנים</h5>
+                        <p class="mb-0">לוחות זמנים מדויקים יוגדרו לאחר:</p>
+                        <ul class="mb-0 mt-2">
+                            <li>השלמת סקר מצב קיים</li>
+                            <li>פגישת תיאום עם משרד הבריאות</li>
+                            <li>קבלת הצעות מחיר מספקים</li>
+                            <li>אישור תקציב סופי</li>
+                        </ul>
                     </div>
                 </section>
 
                 <!-- Budget Section -->
                 <section id="budget" class="dashboard-card">
                     <h3 class="mb-4">
-                        <i class="bi bi-currency-dollar"></i> תקציב משוער
+                        <i class="bi bi-currency-dollar"></i> תכנון תקציבי
                     </h3>
                     
+                    <div class="alert alert-warning mb-4">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>סטטוס:</strong> בשלב איסוף נתונים והכנת תקציב מפורט
+                    </div>
+                    
                     <div class="row">
-                        <div class="col-md-6">
-                            <canvas id="budgetChart"></canvas>
-                        </div>
-                        <div class="col-md-6">
-                            <table class="table">
-                                <thead>
-                                    <tr>
-                                        <th>סעיף</th>
-                                        <th>עלות (₪)</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>התאמות מבנה ותשתיות</td>
-                                        <td>1,500,000 - 2,000,000</td>
-                                    </tr>
-                                    <tr>
-                                        <td>ציוד ייצור ומעבדה</td>
-                                        <td>1,000,000 - 1,500,000</td>
-                                    </tr>
-                                    <tr>
-                                        <td>רישוי וייעוץ מקצועי</td>
-                                        <td>300,000 - 500,000</td>
-                                    </tr>
-                                    <tr>
-                                        <td>הון חוזר ראשוני</td>
-                                        <td>500,000 - 1,000,000</td>
-                                    </tr>
-                                    <tr class="table-active">
-                                        <td><strong>סה"כ</strong></td>
-                                        <td><strong>3,300,000 - 5,000,000</strong></td>
-                                    </tr>
-                                </tbody>
-                            </table>
+                        <div class="col-md-12">
+                            <h5 class="mb-3">סעיפי תקציב עיקריים לתכנון:</h5>
+                            
+                            <div class="accordion" id="budgetAccordion">
+                                <!-- התאמות מבנה -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne">
+                                            <i class="bi bi-building me-2"></i> התאמות מבנה ותשתיות
+                                        </button>
+                                    </h2>
+                                    <div id="collapseOne" class="accordion-collapse collapse show" data-bs-parent="#budgetAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li>התאמת חדרים נקיים לתקן ISO 8</li>
+                                                <li>שדרוג מערכת HVAC</li>
+                                                <li>התקנת מערכות סינון אוויר</li>
+                                                <li>הפרדת אזורים ומעברים</li>
+                                                <li>ריצוף וציפויים מיוחדים</li>
+                                                <li>מערכות בקרה וניטור</li>
+                                            </ul>
+                                            <span class="badge bg-info">תקציב בהכנה</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- ציוד -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo">
+                                            <i class="bi bi-gear me-2"></i> ציוד ייצור ומעבדה
+                                        </button>
+                                    </h2>
+                                    <div id="collapseTwo" class="accordion-collapse collapse" data-bs-parent="#budgetAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li>מערבלים ומיכלי ייצור</li>
+                                                <li>מכונות מילוי ואריזה</li>
+                                                <li>ציוד מעבדה לבדיקות איכות</li>
+                                                <li>מערכות שקילה מדויקות</li>
+                                                <li>ציוד בטיחות ומיגון</li>
+                                                <li>מערכות מחשוב ותוכנה</li>
+                                            </ul>
+                                            <span class="badge bg-info">תקציב בהכנה</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- רישוי וייעוץ -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree">
+                                            <i class="bi bi-clipboard-check me-2"></i> רישוי וייעוץ מקצועי
+                                        </button>
+                                    </h2>
+                                    <div id="collapseThree" class="accordion-collapse collapse" data-bs-parent="#budgetAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li>יועץ GMP מוסמך</li>
+                                                <li>יועץ בטיחות</li>
+                                                <li>אגרות משרד הבריאות</li>
+                                                <li>רישיון עסק</li>
+                                                <li>היתרי בנייה ושינויים</li>
+                                                <li>בדיקות מעבדה חיצוניות</li>
+                                                <li>הסמכות ותקנים</li>
+                                            </ul>
+                                            <span class="badge bg-info">תקציב בהכנה</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <!-- הון חוזר -->
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFour">
+                                            <i class="bi bi-cash-stack me-2"></i> הון חוזר והוצאות שוטפות
+                                        </button>
+                                    </h2>
+                                    <div id="collapseFour" class="accordion-collapse collapse" data-bs-parent="#budgetAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li>חומרי גלם ראשוניים</li>
+                                                <li>אריזות ותוויות</li>
+                                                <li>שכר עובדים והדרכות</li>
+                                                <li>חשמל ואנרגיה</li>
+                                                <li>תחזוקה שוטפת</li>
+                                                <li>ביטוחים</li>
+                                                <li>שיווק והשקה</li>
+                                            </ul>
+                                            <span class="badge bg-info">תקציב בהכנה</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-4 bg-light rounded">
+                                <h5><i class="bi bi-calculator"></i> הכנת תקציב מפורט</h5>
+                                <p>התקציב המדויק ייקבע לאחר:</p>
+                                <ul>
+                                    <li>סקר מפורט של המתקן הקיים</li>
+                                    <li>הגדרת דרישות ספציפיות ממשרד הבריאות</li>
+                                    <li>קבלת הצעות מחיר מספקים</li>
+                                    <li>בחירת רמת האוטומציה הרצויה</li>
+                                    <li>הגדרת קיבולת ייצור יעד</li>
+                                </ul>
+                                <div class="mt-3">
+                                    <button class="btn btn-primary" onclick="alert('פונקציה זו תהיה זמינה בקרוב')">
+                                        <i class="bi bi-download"></i> הורד טופס בקשת הצעת מחיר
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -838,37 +945,7 @@
             }
         }
 
-        // Budget Chart
-        const ctx = document.getElementById('budgetChart');
-        if (ctx) {
-            new Chart(ctx.getContext('2d'), {
-                type: 'doughnut',
-                data: {
-                    labels: ['התאמות מבנה', 'ציוד', 'רישוי וייעוץ', 'הון חוזר'],
-                    datasets: [{
-                        data: [1750000, 1250000, 400000, 750000],
-                        backgroundColor: [
-                            '#3498db',
-                            '#2ecc71',
-                            '#f39c12',
-                            '#9b59b6'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        },
-                        title: {
-                            display: true,
-                            text: 'התפלגות תקציב משוער (₪)'
-                        }
-                    }
-                }
-            });
-        }
+        // Budget chart removed - will be added when budget is finalized
 
         // Auto-update progress based on current date
         function updateProgress() {
