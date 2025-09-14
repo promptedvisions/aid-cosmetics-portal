@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AID COSMETICS - HR Module & Organizational Structure</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #16a085;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 30px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .content-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        /* Organizational Chart Styles */
+        .org-chart {
+            display: flex;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .org-tree {
+            display: inline-block;
+            min-width: 100%;
+        }
+
+        .org-tree ul {
+            padding-top: 20px;
+            position: relative;
+            transition: all 0.5s;
+            list-style: none;
+            margin: 0;
+            padding-right: 0;
+        }
+
+        .org-tree li {
+            float: right;
+            text-align: center;
+            list-style-type: none;
+            position: relative;
+            padding: 20px 5px 0 5px;
+            transition: all 0.5s;
+        }
+
+        .org-tree li::before, .org-tree li::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            border-top: 2px solid #ccc;
+            width: 50%;
+            height: 20px;
+        }
+
+        .org-tree li::after {
+            left: auto;
+            right: 50%;
+            border-right: 2px solid #ccc;
+        }
+
+        .org-tree li:only-child::after, .org-tree li:only-child::before {
+            display: none;
+        }
+
+        .org-tree li:only-child {
+            padding-top: 0;
+        }
+
+        .org-tree li:first-child::before, .org-tree li:last-child::after {
+            border: 0 none;
+        }
+
+        .org-tree li:last-child::before {
+            border-left: 2px solid #ccc;
+            border-radius: 0 0 0 5px;
+        }
+
+        .org-tree li:first-child::after {
+            border-radius: 0 0 5px 0;
+        }
+
+        .org-tree ul ul::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            right: 50%;
+            border-right: 2px solid #ccc;
+            width: 0;
+            height: 20px;
+        }
+
+        .org-tree li .employee-card {
+            border: 2px solid #ccc;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: #333;
+            font-size: 14px;
+            display: inline-block;
+            border-radius: 10px;
+            transition: all 0.3s;
+            background: white;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            min-width: 150px;
+            cursor: pointer;
+        }
+
+        .org-tree li .employee-card:hover {
+            background: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+            transform: scale(1.05);
+        }
+
+        .employee-card .position {
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .employee-card .name {
+            font-size: 12px;
+            color: #666;
+        }
+
+        .employee-card:hover .name {
+            color: white;
+        }
+
+        .employee-card .badge {
+            margin-top: 5px;
+            font-size: 10px;
+        }
+
+        /* Department colors */
+        .dept-management { border-color: #e74c3c !important; }
+        .dept-qa { border-color: #3498db !important; }
+        .dept-production { border-color: #27ae60 !important; }
+        .dept-qc { border-color: #f39c12 !important; }
+        .dept-warehouse { border-color: #9b59b6 !important; }
+        .dept-maintenance { border-color: #1abc9c !important; }
+        .dept-admin { border-color: #95a5a6 !important; }
+
+        /* Stats Cards */
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-right: 4px solid;
+            transition: all 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateX(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stat-card.total { border-color: var(--primary-color); }
+        .stat-card.active { border-color: var(--success-color); }
+        .stat-card.departments { border-color: var(--info-color); }
+        .stat-card.compliance { border-color: var(--warning-color); }
+
+        /* Employee Table */
+        .employee-table {
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .employee-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: 600;
+            border: none;
+        }
+
+        .employee-table td {
+            vertical-align: middle;
+        }
+
+        /* Tabs */
+        .nav-tabs .nav-link {
+            color: var(--primary-color);
+            font-weight: 500;
+            border-radius: 10px 10px 0 0;
+        }
+
+        .nav-tabs .nav-link.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        /* Position Requirements */
+        .requirement-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-right: 3px solid var(--secondary-color);
+        }
+
+        /* Print Styles */
+        @media print {
+            .no-print { display: none !important; }
+            .org-chart { overflow: visible; }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .org-tree { 
+                transform: scale(0.7);
+                transform-origin: top center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="bi bi-people-fill"></i> HR Module - Organizational Structure
+                    </h1>
+                    <p class="mb-0 mt-2">Human Resources Management for Cosmetics Manufacturing (10-15 Employees)</p>
+                </div>
+                <div class="col-md-4 text-start">
+                    <button class="btn btn-light no-print" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Chart
+                    </button>
+                    <a href="index.html" class="btn btn-outline-light no-print">
+                        <i class="bi bi-house"></i> Back to Portal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Statistics Dashboard -->
+        <div class="row mb-4">
+            <div class="col-md-3">
+                <div class="stat-card total">
+                    <h3 id="totalEmployees">14</h3>
+                    <p class="mb-0">Total Employees</p>
+                    <small class="text-muted">Target: 10-15</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card active">
+                    <h3 id="activePositions">12</h3>
+                    <p class="mb-0">Filled Positions</p>
+                    <small class="text-muted">86% Staffed</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card departments">
+                    <h3>7</h3>
+                    <p class="mb-0">Departments</p>
+                    <small class="text-muted">All Active</small>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="stat-card compliance">
+                    <h3>100%</h3>
+                    <p class="mb-0">GMP Compliance</p>
+                    <small class="text-muted">ISO 22716</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Navigation -->
+        <ul class="nav nav-tabs mb-4" id="hrTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="orgchart-tab" data-bs-toggle="tab" data-bs-target="#orgchart" type="button">
+                    <i class="bi bi-diagram-3"></i> Organizational Chart
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="positions-tab" data-bs-toggle="tab" data-bs-target="#positions" type="button">
+                    <i class="bi bi-person-badge"></i> Position Details
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="requirements-tab" data-bs-toggle="tab" data-bs-target="#requirements" type="button">
+                    <i class="bi bi-clipboard-check"></i> Regulatory Requirements
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="training-tab" data-bs-toggle="tab" data-bs-target="#training" type="button">
+                    <i class="bi bi-mortarboard"></i> Training Matrix
+                </button>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="hrTabContent">
+            <!-- Organizational Chart Tab -->
+            <div class="tab-pane fade show active" id="orgchart" role="tabpanel">
+                <div class="content-card">
+                    <h3 class="mb-4">Organizational Structure - Small Cosmetics Factory</h3>
+                    
+                    <div class="org-chart">
+                        <div class="org-tree">
+                            <ul>
+                                <li>
+                                    <div class="employee-card dept-management">
+                                        <div class="position">CEO/Plant Manager</div>
+                                        <div class="name">1 Position</div>
+                                        <span class="badge bg-danger">Management</span>
+                                    </div>
+                                    <ul>
+                                        <li>
+                                            <div class="employee-card dept-qa">
+                                                <div class="position">QA Manager</div>
+                                                <div class="name">1 Position</div>
+                                                <span class="badge bg-primary">Quality</span>
+                                            </div>
+                                            <ul>
+                                                <li>
+                                                    <div class="employee-card dept-qc">
+                                                        <div class="position">QC Technician</div>
+                                                        <div class="name">1-2 Positions</div>
+                                                        <span class="badge bg-warning">QC Lab</span>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <div class="employee-card dept-production">
+                                                <div class="position">Production Manager</div>
+                                                <div class="name">1 Position</div>
+                                                <span class="badge bg-success">Production</span>
+                                            </div>
+                                            <ul>
+                                                <li>
+                                                    <div class="employee-card dept-production">
+                                                        <div class="position">Production Operators</div>
+                                                        <div class="name">4-5 Positions</div>
+                                                        <span class="badge bg-success">Production</span>
+                                                    </div>
+                                                </li>
+                                                <li>
+                                                    <div class="employee-card dept-warehouse">
+                                                        <div class="position">Warehouse Keeper</div>
+                                                        <div class="name">1 Position</div>
+                                                        <span class="badge bg-purple">Logistics</span>
+                                                    </div>
+                                                </li>
+                                            </ul>
+                                        </li>
+                                        <li>
+                                            <div class="employee-card dept-maintenance">
+                                                <div class="position">Maintenance Tech</div>
+                                                <div class="name">1 Position</div>
+                                                <span class="badge bg-info">Technical</span>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div class="employee-card dept-admin">
+                                                <div class="position">Admin/HR</div>
+                                                <div class="name">1 Position</div>
+                                                <span class="badge bg-secondary">Admin</span>
+                                            </div>
+                                        </li>
+                                    </ul>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mt-4">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>Note:</strong> External services can be used for: Safety Officer (part-time), Advanced QC testing, IT support, and specialized maintenance.
+                    </div>
+                </div>
+            </div>
+
+            <!-- Position Details Tab -->
+            <div class="tab-pane fade" id="positions" role="tabpanel">
+                <div class="content-card">
+                    <h3 class="mb-4">Position Details & Responsibilities</h3>
+                    
+                    <div class="table-responsive employee-table">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Department</th>
+                                    <th>Position</th>
+                                    <th>Count</th>
+                                    <th>Key Responsibilities</th>
+                                    <th>GMP Requirements</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="badge bg-danger">Management</span></td>
+                                    <td><strong>CEO/Plant Manager</strong></td>
+                                    <td>1</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>Overall facility management</li>
+                                            <li>Regulatory compliance</li>
+                                            <li>Strategic planning</li>
+                                            <li>Budget management</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Qualified Person</span>
+                                        <span class="badge bg-info">GMP Training</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-primary">Quality</span></td>
+                                    <td><strong>QA Manager</strong></td>
+                                    <td>1</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>Quality system management</li>
+                                            <li>Product release</li>
+                                            <li>Complaints & CAPA</li>
+                                            <li>Documentation control</li>
+                                            <li>Supplier qualification</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-danger">Independent from Production</span>
+                                        <span class="badge bg-success">Release Authority</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-warning">QC Lab</span></td>
+                                    <td><strong>QC Technician</strong></td>
+                                    <td>1-2</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>Raw material testing</li>
+                                            <li>In-process controls</li>
+                                            <li>Finished product testing</li>
+                                            <li>Stability studies</li>
+                                            <li>pH, viscosity, micro tests</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Lab Training</span>
+                                        <span class="badge bg-warning">Sampling SOPs</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-success">Production</span></td>
+                                    <td><strong>Production Manager</strong></td>
+                                    <td>1</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>Production planning</li>
+                                            <li>Batch record management</li>
+                                            <li>Equipment qualification</li>
+                                            <li>Process optimization</li>
+                                            <li>Team supervision</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">Manufacturing SOPs</span>
+                                        <span class="badge bg-info">Process Validation</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-success">Production</span></td>
+                                    <td><strong>Production Operators</strong></td>
+                                    <td>4-5</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>Mixing operations</li>
+                                            <li>Filling & packaging</li>
+                                            <li>Equipment cleaning</li>
+                                            <li>In-process checks</li>
+                                            <li>Batch documentation</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">GMP Training</span>
+                                        <span class="badge bg-warning">Hygiene Training</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-purple">Logistics</span></td>
+                                    <td><strong>Warehouse Keeper</strong></td>
+                                    <td>1</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>Inventory management</li>
+                                            <li>FIFO/FEFO control</li>
+                                            <li>Material receiving</li>
+                                            <li>Storage conditions</li>
+                                            <li>Distribution records</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Storage SOPs</span>
+                                        <span class="badge bg-success">Traceability</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-info">Technical</span></td>
+                                    <td><strong>Maintenance Technician</strong></td>
+                                    <td>1</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>Equipment maintenance</li>
+                                            <li>HVAC monitoring</li>
+                                            <li>Utilities management</li>
+                                            <li>Calibration program</li>
+                                            <li>Preventive maintenance</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-warning">Calibration SOPs</span>
+                                        <span class="badge bg-info">Technical Training</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><span class="badge bg-secondary">Admin</span></td>
+                                    <td><strong>Admin/HR Coordinator</strong></td>
+                                    <td>1</td>
+                                    <td>
+                                        <ul class="mb-0">
+                                            <li>HR management</li>
+                                            <li>Training records</li>
+                                            <li>Document control</li>
+                                            <li>Regulatory filing</li>
+                                            <li>General administration</li>
+                                        </ul>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">Document Control</span>
+                                        <span class="badge bg-secondary">Training Matrix</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-6">
+                            <div class="alert alert-warning">
+                                <h5><i class="bi bi-exclamation-triangle"></i> Critical Positions</h5>
+                                <ul class="mb-0">
+                                    <li><strong>QA Manager</strong> - Must be independent from production</li>
+                                    <li><strong>Production Manager</strong> - Cannot approve product release</li>
+                                    <li><strong>QC Technician</strong> - Reports to QA, not Production</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="alert alert-success">
+                                <h5><i class="bi bi-lightbulb"></i> Cost Optimization</h5>
+                                <ul class="mb-0">
+                                    <li>Safety Officer - External consultant (2-4 hours/month)</li>
+                                    <li>Microbiological testing - External lab</li>
+                                    <li>IT Support - Outsourced service</li>
+                                    <li>Complex maintenance - Service contracts</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Regulatory Requirements Tab -->
+            <div class="tab-pane fade" id="requirements" role="tabpanel">
+                <div class="content-card">
+                    <h3 class="mb-4">Regulatory HR Requirements - ISO 22716 & MOH</h3>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="text-primary">ISO 22716 GMP Requirements</h5>
+                            <div class="requirement-item">
+                                <strong>1. Qualified Personnel</strong>
+                                <p class="mb-0">All personnel must be qualified by education, training, and experience</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>2. Training Program</strong>
+                                <p class="mb-0">Documented training for GMP, hygiene, job-specific tasks</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>3. Job Descriptions</strong>
+                                <p class="mb-0">Clear roles, responsibilities, and reporting structure</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>4. Hygiene Requirements</strong>
+                                <p class="mb-0">Health checks, personal hygiene, protective clothing</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>5. Training Records</strong>
+                                <p class="mb-0">Maintain records of all training activities and competency assessments</p>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6">
+                            <h5 class="text-success">Israeli MOH Requirements</h5>
+                            <div class="requirement-item">
+                                <strong>1. Responsible Person</strong>
+                                <p class="mb-0">Designated person for regulatory compliance (usually QA Manager)</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>2. Safety Officer</strong>
+                                <p class="mb-0">Required by law - can be external for small facilities</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>3. Hebrew Documentation</strong>
+                                <p class="mb-0">Key documents and labels must be in Hebrew</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>4. Product Release Authority</strong>
+                                <p class="mb-0">QA Manager must have authority to release products</p>
+                            </div>
+                            <div class="requirement-item">
+                                <strong>5. Inspection Readiness</strong>
+                                <p class="mb-0">Personnel trained to handle MOH inspections</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <h5 class="text-danger">Mandatory Documentation</h5>
+                        <div class="table-responsive">
+                            <table class="table table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Document Type</th>
+                                        <th>Description</th>
+                                        <th>Update Frequency</th>
+                                        <th>Responsible</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Organization Chart</td>
+                                        <td>Current structure with names and positions</td>
+                                        <td>When changes occur</td>
+                                        <td>HR/Admin</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Job Descriptions</td>
+                                        <td>Detailed roles and responsibilities</td>
+                                        <td>Annual review</td>
+                                        <td>HR/Department Heads</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Training Matrix</td>
+                                        <td>Required training per position</td>
+                                        <td>Annual review</td>
+                                        <td>QA Manager</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Training Records</td>
+                                        <td>Individual training files</td>
+                                        <td>Ongoing</td>
+                                        <td>HR/Admin</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Competency Assessments</td>
+                                        <td>Skill verification records</td>
+                                        <td>Annual</td>
+                                        <td>Department Heads</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Health Certificates</td>
+                                        <td>Medical clearance for production staff</td>
+                                        <td>Annual</td>
+                                        <td>HR/Admin</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Training Matrix Tab -->
+            <div class="tab-pane fade" id="training" role="tabpanel">
+                <div class="content-card">
+                    <h3 class="mb-4">Training Matrix - Small Factory Configuration</h3>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Training Module</th>
+                                    <th>CEO</th>
+                                    <th>QA</th>
+                                    <th>Production Mgr</th>
+                                    <th>Operators</th>
+                                    <th>QC</th>
+                                    <th>Warehouse</th>
+                                    <th>Maintenance</th>
+                                    <th>Admin</th>
+                                    <th>Frequency</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>GMP Basics</strong></td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td><span class="badge bg-info">Annual</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Personal Hygiene</strong></td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td><span class="badge bg-info">Annual</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Documentation</strong></td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">✅</td>
+                                    <td><span class="badge bg-warning">Bi-annual</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Product Safety</strong></td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td><span class="badge bg-info">Annual</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Equipment Operation</strong></td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td><span class="badge bg-success">Initial + Updates</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Laboratory Testing</strong></td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td><span class="badge bg-success">Initial + Updates</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>HACCP/Safety</strong></td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td><span class="badge bg-info">Annual</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Emergency Response</strong></td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td><span class="badge bg-warning">Bi-annual</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Regulatory Updates</strong></td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">✅</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td class="text-center">-</td>
+                                    <td><span class="badge bg-danger">As needed</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="row mt-4">
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title text-success">Initial Training</h5>
+                                    <p class="card-text">New employees must complete:</p>
+                                    <ul>
+                                        <li>GMP introduction (4 hours)</li>
+                                        <li>Hygiene training (2 hours)</li>
+                                        <li>Job-specific SOPs (8-16 hours)</li>
+                                        <li>Safety orientation (2 hours)</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title text-warning">Refresher Training</h5>
+                                    <p class="card-text">Annual requirements:</p>
+                                    <ul>
+                                        <li>GMP update (2 hours)</li>
+                                        <li>New procedures review</li>
+                                        <li>Deviation case studies</li>
+                                        <li>Regulatory changes</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-body">
+                                    <h5 class="card-title text-info">Competency Assessment</h5>
+                                    <p class="card-text">Verification methods:</p>
+                                    <ul>
+                                        <li>Written tests (80% pass)</li>
+                                        <li>Practical demonstrations</li>
+                                        <li>Observation checklists</li>
+                                        <li>Annual performance review</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Cost Analysis Section -->
+        <div class="content-card mt-4">
+            <h3 class="mb-4">Staffing Cost Analysis - Small Factory Model</h3>
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Monthly Salary Estimates (ILS)</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Position</th>
+                                <th>Count</th>
+                                <th>Salary Range</th>
+                                <th>Total/Month</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>CEO/Plant Manager</td>
+                                <td>1</td>
+                                <td>20,000-25,000</td>
+                                <td>22,500</td>
+                            </tr>
+                            <tr>
+                                <td>QA Manager</td>
+                                <td>1</td>
+                                <td>12,000-15,000</td>
+                                <td>13,500</td>
+                            </tr>
+                            <tr>
+                                <td>Production Manager</td>
+                                <td>1</td>
+                                <td>10,000-12,000</td>
+                                <td>11,000</td>
+                            </tr>
+                            <tr>
+                                <td>Production Operators</td>
+                                <td>5</td>
+                                <td>6,500-8,000</td>
+                                <td>37,500</td>
+                            </tr>
+                            <tr>
+                                <td>QC Technician</td>
+                                <td>2</td>
+                                <td>7,000-9,000</td>
+                                <td>16,000</td>
+                            </tr>
+                            <tr>
+                                <td>Warehouse Keeper</td>
+                                <td>1</td>
+                                <td>6,500-8,000</td>
+                                <td>7,250</td>
+                            </tr>
+                            <tr>
+                                <td>Maintenance Tech</td>
+                                <td>1</td>
+                                <td>8,000-10,000</td>
+                                <td>9,000</td>
+                            </tr>
+                            <tr>
+                                <td>Admin/HR</td>
+                                <td>1</td>
+                                <td>7,000-9,000</td>
+                                <td>8,000</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td><strong>Total</strong></td>
+                                <td><strong>14</strong></td>
+                                <td><strong>-</strong></td>
+                                <td><strong>124,750</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                
+                <div class="col-md-6">
+                    <h5>External Services (Monthly)</h5>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Hours/Month</th>
+                                <th>Cost (ILS)</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Safety Officer</td>
+                                <td>4</td>
+                                <td>2,000</td>
+                            </tr>
+                            <tr>
+                                <td>IT Support</td>
+                                <td>8</td>
+                                <td>1,500</td>
+                            </tr>
+                            <tr>
+                                <td>External Lab Tests</td>
+                                <td>-</td>
+                                <td>3,000</td>
+                            </tr>
+                            <tr>
+                                <td>Specialized Maintenance</td>
+                                <td>As needed</td>
+                                <td>2,000</td>
+                            </tr>
+                            <tr class="table-warning">
+                                <td><strong>Total External</strong></td>
+                                <td><strong>-</strong></td>
+                                <td><strong>8,500</strong></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    
+                    <div class="alert alert-success">
+                        <h5>Cost Optimization Tips</h5>
+                        <ul class="mb-0">
+                            <li>Combine roles where regulatory allows</li>
+                            <li>Use external services for specialized functions</li>
+                            <li>Cross-train employees for flexibility</li>
+                            <li>Implement performance-based incentives</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <h4>Total Monthly HR Cost: <span class="text-primary">~133,250 ILS</span></h4>
+                <h5>Annual HR Budget: <span class="text-success">~1,599,000 ILS</span></h5>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4 bg-dark text-white">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 AID COSMETICS - HR Module</p>
+            <p class="mb-0 mt-2">
+                <small>ISO 22716 GMP Compliant Organization Structure</small>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Interactive features for the organizational chart
+        document.querySelectorAll('.employee-card').forEach(card => {
+            card.addEventListener('click', function() {
+                // You can add modal or detailed view functionality here
+                const position = this.querySelector('.position').textContent;
+                const count = this.querySelector('.name').textContent;
+                console.log(`Position: ${position}, ${count}`);
+            });
+        });
+
+        // Print functionality
+        function printChart() {
+            window.print();
+        }
+
+        // Dynamic employee counter
+        function updateEmployeeCount() {
+            const counts = [1, 1, 1, 5, 2, 1, 1, 1]; // Position counts
+            const total = counts.reduce((a, b) => a + b, 0);
+            document.getElementById('totalEmployees').textContent = total;
+            document.getElementById('activePositions').textContent = total - 2; // Assuming 2 open positions
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateEmployeeCount();
+        });
+    </script>
+</body>
+</html>
