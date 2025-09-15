@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AID COSMETICS - דיגיטל טווין רצפת ייצור</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #16a085;
+            --production-color: #3498db;
+            --qc-color: #27ae60;
+            --packaging-color: #f39c12;
+            --warehouse-color: #e67e22;
+            --office-color: #95a5a6;
+            --utilities-color: #9b59b6;
+            --raw-material-color: #2980b9;
+            --finished-goods-color: #c0392b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .floor-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        #floorPlan {
+            width: 100%;
+            height: 600px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: grab;
+            background: #f8f9fa;
+        }
+
+        #floorPlan.dragging {
+            cursor: grabbing;
+        }
+
+        .zone {
+            stroke: #333;
+            stroke-width: 2;
+            opacity: 0.8;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .zone:hover {
+            opacity: 1;
+            stroke-width: 3;
+            filter: brightness(1.1);
+        }
+
+        .zone-label {
+            fill: white;
+            font-size: 14px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .equipment {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .equipment:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+        }
+
+        .equipment-icon {
+            fill: #333;
+        }
+
+        .airflow-particle {
+            fill: #3498db;
+            opacity: 0.3;
+            animation: flow 10s linear infinite;
+        }
+
+        @keyframes flow {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(800px, 0); }
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-running { background: #27ae60; }
+        .status-idle { background: #f39c12; }
+        .status-maintenance { background: #e74c3c; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 currentColor; }
+            70% { box-shadow: 0 0 0 10px transparent; }
+            100% { box-shadow: 0 0 0 0 transparent; }
+        }
+
+        .metric-card {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            border-right: 4px solid var(--primary-color);
+        }
+
+        .metric-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 12px;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin: 5px 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-left: 5px;
+            border: 1px solid #333;
+        }
+
+        .tooltip-custom {
+            position: absolute;
+            background: rgba(0,0,0,0.9);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        .alert-badge {
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            background: #e74c3c;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.5; }
+        }
+
+        .hvac-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .pressure-gradient {
+            stop-color: #3498db;
+        }
+
+        .temperature-heatmap {
+            opacity: 0.3;
+        }
+
+        .control-btn {
+            margin: 5px;
+            min-width: 120px;
+        }
+
+        .view-toggle {
+            background: #f8f9fa;
+            border-radius: 20px;
+            padding: 5px;
+            display: inline-flex;
+        }
+
+        .view-toggle button {
+            border: none;
+            background: transparent;
+            padding: 5px 15px;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .view-toggle button.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        @media print {
+            .control-panel { display: none; }
+            .main-header { print-color-adjust: exact; }
+        }
+
+        .equipment-popup {
+            position: absolute;
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+            min-width: 250px;
+        }
+
+        .equipment-popup h5 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 5px;
+        }
+
+        .equipment-detail {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+            font-size: 14px;
+        }
+
+        .equipment-detail-label {
+            color: #666;
+        }
+
+        .equipment-detail-value {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="bi bi-building-gear"></i> דיגיטל טווין - רצפת ייצור
+                    </h1>
+                    <p class="mb-0 mt-2">מעקב וניטור בזמן אמת - AID COSMETICS</p>
+                </div>
+                <div class="col-md-4 text-start">
+                    <button class="btn btn-light btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer"></i> הדפס
+                    </button>
+                    <a href="index.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-house"></i> חזרה לפורטל
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container mt-4">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="row">
+                <div class="col-md-8">
+                    <h4><i class="bi bi-sliders"></i> לוח בקרה</h4>
+                    <div class="view-toggle mt-3">
+                        <button class="active" onclick="setView('2d')">תצוגת 2D</button>
+                        <button onclick="setView('flow')">זרימת חומרים</button>
+                        <button onclick="setView('hvac')">מערכת HVAC</button>
+                        <button onclick="setView('status')">סטטוס ציוד</button>
+                    </div>
+                    <div class="mt-3">
+                        <button class="btn btn-sm btn-primary control-btn" onclick="zoomIn()">
+                            <i class="bi bi-zoom-in"></i> הגדל
+                        </button>
+                        <button class="btn btn-sm btn-primary control-btn" onclick="zoomOut()">
+                            <i class="bi bi-zoom-out"></i> הקטן
+                        </button>
+                        <button class="btn btn-sm btn-secondary control-btn" onclick="resetView()">
+                            <i class="bi bi-arrow-counterclockwise"></i> איפוס
+                        </button>
+                        <button class="btn btn-sm btn-info control-btn" onclick="toggleAnimation()">
+                            <i class="bi bi-play-circle"></i> אנימציה
+                        </button>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h5>סטטוס כללי</h5>
+                    <div class="metric-card">
+                        <div class="metric-value">
+                            <span id="activeEquipment">12</span>/14
+                            <span class="status-indicator status-running"></span>
+                        </div>
+                        <div class="metric-label">ציוד פעיל</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">
+                            <span id="batchProgress">65</span>%
+                            <span class="status-indicator status-running"></span>
+                        </div>
+                        <div class="metric-label">התקדמות אצווה</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floor Plan Visualization -->
+        <div class="floor-container">
+            <svg id="floorPlan" viewBox="0 0 1000 600">
+                <!-- Define gradients and patterns -->
+                <defs>
+                    <linearGradient id="productionGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#3498db;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#2980b9;stop-opacity:1" />
+                    </linearGradient>
+                    <linearGradient id="qcGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#27ae60;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#229954;stop-opacity:1" />
+                    </linearGradient>
+                    <pattern id="gridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#ddd" stroke-width="0.5"/>
+                    </pattern>
+                    <!-- Arrow marker for flow -->
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                            refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+                    </marker>
+                </defs>
+
+                <!-- Background grid -->
+                <rect width="1000" height="600" fill="url(#gridPattern)" />
+
+                <!-- Production Area -->
+                <g id="productionZone">
+                    <rect x="50" y="50" width="300" height="250" 
+                          class="zone" fill="url(#productionGradient)" rx="5" />
+                    <text x="200" y="175" class="zone-label">אזור ייצור</text>
+                    <text x="200" y="195" class="zone-label" style="font-size:12px">Class D (ISO 8)</text>
+                    <text x="200" y="215" class="zone-label" style="font-size:12px">220 מ"ר</text>
+                    
+                    <!-- Equipment in production area -->
+                    <g class="equipment" transform="translate(100, 100)" onclick="showEquipmentDetails('mixer1')">
+                        <circle r="25" fill="#fff" stroke="#333" stroke-width="2"/>
+                        <text y="5" text-anchor="middle" font-size="10">מערבל</text>
+                        <text y="15" text-anchor="middle" font-size="8">1000L</text>
+                    </g>
+                    <g class="equipment" transform="translate(180, 100)" onclick="showEquipmentDetails('mixer2')">
+                        <circle r="20" fill="#fff" stroke="#333" stroke-width="2"/>
+                        <text y="5" text-anchor="middle" font-size="10">מערבל</text>
+                        <text y="15" text-anchor="middle" font-size="8">500L</text>
+                    </g>
+                    <g class="equipment" transform="translate(250, 100)" onclick="showEquipmentDetails('homogenizer')">
+                        <rect x="-20" y="-20" width="40" height="40" fill="#fff" stroke="#333" stroke-width="2" rx="5"/>
+                        <text y="5" text-anchor="middle" font-size="10">הומוגנייזר</text>
+                    </g>
+                    <g class="equipment" transform="translate(150, 200)" onclick="showEquipmentDetails('filling1')">
+                        <rect x="-30" y="-15" width="60" height="30" fill="#fff" stroke="#333" stroke-width="2" rx="3"/>
+                        <text y="5" text-anchor="middle" font-size="10">מילוי</text>
+                    </g>
+                </g>
+
+                <!-- QC Laboratory -->
+                <g id="qcZone">
+                    <rect x="400" y="50" width="150" height="150" 
+                          class="zone" fill="url(#qcGradient)" rx="5" />
+                    <text x="475" y="125" class="zone-label">מעבדת QC</text>
+                    <text x="475" y="145" class="zone-label" style="font-size:12px">Class C (ISO 7)</text>
+                    <text x="475" y="165" class="zone-label" style="font-size:12px">40 מ"ר</text>
+                    
+                    <!-- Lab equipment -->
+                    <g class="equipment" transform="translate(450, 100)" onclick="showEquipmentDetails('phMeter')">
+                        <rect x="-15" y="-15" width="30" height="30" fill="#fff" stroke="#333" stroke-width="2"/>
+                        <text y="5" text-anchor="middle" font-size="8">pH</text>
+                    </g>
+                    <g class="equipment" transform="translate(500, 100)" onclick="showEquipmentDetails('viscometer')">
+                        <rect x="-15" y="-15" width="30" height="30" fill="#fff" stroke="#333" stroke-width="2"/>
+                        <text y="5" text-anchor="middle" font-size="8">צמיגות</text>
+                    </g>
+                </g>
+
+                <!-- Packaging Area -->
+                <g id="packagingZone">
+                    <rect x="600" y="50" width="350" height="200" 
+                          class="zone" fill="#f39c12" opacity="0.8" rx="5" />
+                    <text x="775" y="150" class="zone-label">אזור אריזה</text>
+                    <text x="775" y="170" class="zone-label" style="font-size:12px">Class D (ISO 8)</text>
+                    <text x="775" y="190" class="zone-label" style="font-size:12px">80 מ"ר</text>
+                    
+                    <!-- Packaging equipment -->
+                    <g class="equipment" transform="translate(700, 120)" onclick="showEquipmentDetails('capping')">
+                        <rect x="-25" y="-15" width="50" height="30" fill="#fff" stroke="#333" stroke-width="2" rx="3"/>
+                        <text y="5" text-anchor="middle" font-size="10">מכסה</text>
+                    </g>
+                    <g class="equipment" transform="translate(800, 120)" onclick="showEquipmentDetails('labeling')">
+                        <rect x="-25" y="-15" width="50" height="30" fill="#fff" stroke="#333" stroke-width="2" rx="3"/>
+                        <text y="5" text-anchor="middle" font-size="10">תיוג</text>
+                    </g>
+                    <g class="equipment" transform="translate(870, 120)" onclick="showEquipmentDetails('cartoning')">
+                        <rect x="-25" y="-15" width="50" height="30" fill="#fff" stroke="#333" stroke-width="2" rx="3"/>
+                        <text y="5" text-anchor="middle" font-size="10">קרטון</text>
+                    </g>
+                </g>
+
+                <!-- Raw Material Storage -->
+                <g id="rawMaterialZone">
+                    <rect x="50" y="350" width="200" height="200" 
+                          class="zone" fill="#2980b9" opacity="0.8" rx="5" />
+                    <text x="150" y="450" class="zone-label">אחסון חומרי גלם</text>
+                    <text x="150" y="470" class="zone-label" style="font-size:12px">50 מ"ר</text>
+                    <text x="150" y="490" class="zone-label" style="font-size:12px">18-25°C</text>
+                </g>
+
+                <!-- Finished Goods Storage -->
+                <g id="finishedGoodsZone">
+                    <rect x="300" y="350" width="200" height="200" 
+                          class="zone" fill="#c0392b" opacity="0.8" rx="5" />
+                    <text x="400" y="450" class="zone-label">אחסון מוצר מוגמר</text>
+                    <text x="400" y="470" class="zone-label" style="font-size:12px">50 מ"ר</text>
+                    <text x="400" y="490" class="zone-label" style="font-size:12px">15-25°C</text>
+                </g>
+
+                <!-- Warehouse -->
+                <g id="warehouseZone">
+                    <rect x="550" y="300" width="400" height="250" 
+                          class="zone" fill="#e67e22" opacity="0.8" rx="5" />
+                    <text x="750" y="425" class="zone-label">מחסן כללי</text>
+                    <text x="750" y="445" class="zone-label" style="font-size:12px">150 מ"ר</text>
+                </g>
+
+                <!-- Office Area -->
+                <g id="officeZone">
+                    <rect x="400" y="230" width="150" height="70" 
+                          class="zone" fill="#95a5a6" opacity="0.8" rx="5" />
+                    <text x="475" y="265" class="zone-label">משרדים</text>
+                    <text x="475" y="280" class="zone-label" style="font-size:12px">100 מ"ר</text>
+                </g>
+
+                <!-- Material Flow Arrows (hidden by default) -->
+                <g id="materialFlow" style="display:none">
+                    <path d="M 250 450 L 100 300 L 150 200 L 700 150 L 750 425" 
+                          fill="none" stroke="#333" stroke-width="3" 
+                          stroke-dasharray="10,5" marker-end="url(#arrowhead)"
+                          opacity="0.7">
+                        <animate attributeName="stroke-dashoffset" 
+                                 values="0;15" dur="1s" repeatCount="indefinite"/>
+                    </path>
+                </g>
+
+                <!-- HVAC Airflow Visualization (hidden by default) -->
+                <g id="hvacFlow" style="display:none">
+                    <!-- Air flow particles -->
+                    <circle class="airflow-particle" r="3" cx="0" cy="100">
+                        <animateTransform attributeName="transform" type="translate" 
+                                          from="0 100" to="1000 100" dur="10s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle class="airflow-particle" r="3" cx="0" cy="200">
+                        <animateTransform attributeName="transform" type="translate" 
+                                          from="0 200" to="1000 200" dur="12s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle class="airflow-particle" r="3" cx="0" cy="300">
+                        <animateTransform attributeName="transform" type="translate" 
+                                          from="0 300" to="1000 300" dur="11s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle class="airflow-particle" r="3" cx="0" cy="400">
+                        <animateTransform attributeName="transform" type="translate" 
+                                          from="0 400" to="1000 400" dur="13s" repeatCount="indefinite"/>
+                    </circle>
+                    <circle class="airflow-particle" r="3" cx="0" cy="500">
+                        <animateTransform attributeName="transform" type="translate" 
+                                          from="0 500" to="1000 500" dur="14s" repeatCount="indefinite"/>
+                    </circle>
+                </g>
+            </svg>
+
+            <!-- Equipment Details Popup -->
+            <div id="equipmentPopup" class="equipment-popup">
+                <h5 id="equipmentName">ציוד</h5>
+                <div class="equipment-detail">
+                    <span class="equipment-detail-label">סטטוס:</span>
+                    <span class="equipment-detail-value" id="equipmentStatus">פעיל</span>
+                </div>
+                <div class="equipment-detail">
+                    <span class="equipment-detail-label">טמפרטורה:</span>
+                    <span class="equipment-detail-value" id="equipmentTemp">22°C</span>
+                </div>
+                <div class="equipment-detail">
+                    <span class="equipment-detail-label">ניצולת:</span>
+                    <span class="equipment-detail-value" id="equipmentUtilization">85%</span>
+                </div>
+                <div class="equipment-detail">
+                    <span class="equipment-detail-label">תחזוקה הבאה:</span>
+                    <span class="equipment-detail-value" id="equipmentMaintenance">15/02/2024</span>
+                </div>
+                <button class="btn btn-sm btn-primary mt-2" onclick="closeEquipmentPopup()">סגור</button>
+            </div>
+        </div>
+
+        <!-- Environmental Monitoring -->
+        <div class="control-panel">
+            <h4><i class="bi bi-thermometer-half"></i> ניטור סביבתי</h4>
+            <div class="row mt-3">
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value">22.5°C</div>
+                        <div class="metric-label">טמפרטורה - ייצור</div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value">45%</div>
+                        <div class="metric-label">לחות יחסית</div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value">12 Pa</div>
+                        <div class="metric-label">לחץ דיפרנציאלי</div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value">23 ACH</div>
+                        <div class="metric-label">חילופי אוויר</div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value">352</div>
+                        <div class="metric-label">חלקיקים/m³</div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value">H13</div>
+                        <div class="metric-label">סטטוס HEPA</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="control-panel">
+            <h5><i class="bi bi-palette"></i> מקרא</h5>
+            <div class="d-flex flex-wrap">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--production-color)"></div>
+                    <span>אזור ייצור</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--qc-color)"></div>
+                    <span>מעבדת QC</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--packaging-color)"></div>
+                    <span>אזור אריזה</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--warehouse-color)"></div>
+                    <span>מחסן</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--raw-material-color)"></div>
+                    <span>חומרי גלם</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--finished-goods-color)"></div>
+                    <span>מוצר מוגמר</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--office-color)"></div>
+                    <span>משרדים</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4 bg-dark text-white">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 AID COSMETICS - Digital Twin Production Floor</p>
+            <p class="mb-0 mt-2">
+                <small>Real-time monitoring and visualization system</small>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let currentZoom = 1;
+        let isDragging = false;
+        let startX, startY;
+        let translateX = 0, translateY = 0;
+        let animationRunning = false;
+        let currentView = '2d';
+
+        const svg = document.getElementById('floorPlan');
+        const equipmentData = {
+            mixer1: {
+                name: 'מערבל 1000L',
+                status: 'פעיל',
+                temp: '23.5°C',
+                utilization: '92%',
+                maintenance: '20/02/2024'
+            },
+            mixer2: {
+                name: 'מערבל 500L',
+                status: 'פעיל',
+                temp: '22.1°C',
+                utilization: '78%',
+                maintenance: '18/02/2024'
+            },
+            homogenizer: {
+                name: 'הומוגנייזר',
+                status: 'תחזוקה',
+                temp: '21.0°C',
+                utilization: '0%',
+                maintenance: 'בתהליך'
+            },
+            filling1: {
+                name: 'מכונת מילוי',
+                status: 'פעיל',
+                temp: '22.8°C',
+                utilization: '85%',
+                maintenance: '25/02/2024'
+            },
+            phMeter: {
+                name: 'מד pH',
+                status: 'פעיל',
+                temp: '20.5°C',
+                utilization: '100%',
+                maintenance: '01/03/2024'
+            },
+            viscometer: {
+                name: 'מד צמיגות',
+                status: 'כבוי',
+                temp: '20.0°C',
+                utilization: '0%',
+                maintenance: '05/03/2024'
+            },
+            capping: {
+                name: 'מכונת מכסה',
+                status: 'פעיל',
+                temp: '23.0°C',
+                utilization: '88%',
+                maintenance: '22/02/2024'
+            },
+            labeling: {
+                name: 'מכונת תיוג',
+                status: 'פעיל',
+                temp: '22.5°C',
+                utilization: '90%',
+                maintenance: '28/02/2024'
+            },
+            cartoning: {
+                name: 'מכונת קרטון',
+                status: 'פעיל',
+                temp: '22.0°C',
+                utilization: '75%',
+                maintenance: '10/03/2024'
+            }
+        };
+
+        // Pan and zoom functionality
+        svg.addEventListener('mousedown', startDrag);
+        svg.addEventListener('mousemove', drag);
+        svg.addEventListener('mouseup', endDrag);
+        svg.addEventListener('mouseleave', endDrag);
+        svg.addEventListener('wheel', handleZoom);
+
+        function startDrag(e) {
+            if (e.target.classList.contains('equipment')) return;
+            isDragging = true;
+            svg.classList.add('dragging');
+            startX = e.clientX - translateX;
+            startY = e.clientY - translateY;
+        }
+
+        function drag(e) {
+            if (!isDragging) return;
+            e.preventDefault();
+            translateX = e.clientX - startX;
+            translateY = e.clientY - startY;
+            updateTransform();
+        }
+
+        function endDrag() {
+            isDragging = false;
+            svg.classList.remove('dragging');
+        }
+
+        function handleZoom(e) {
+            e.preventDefault();
+            const delta = e.deltaY > 0 ? 0.9 : 1.1;
+            currentZoom *= delta;
+            currentZoom = Math.min(Math.max(currentZoom, 0.5), 3);
+            updateTransform();
+        }
+
+        function updateTransform() {
+            const viewBox = svg.viewBox.baseVal;
+            const centerX = viewBox.width / 2;
+            const centerY = viewBox.height / 2;
+            
+            svg.style.transform = `scale(${currentZoom}) translate(${translateX/currentZoom}px, ${translateY/currentZoom}px)`;
+        }
+
+        function zoomIn() {
+            currentZoom *= 1.2;
+            currentZoom = Math.min(currentZoom, 3);
+            updateTransform();
+        }
+
+        function zoomOut() {
+            currentZoom *= 0.8;
+            currentZoom = Math.max(currentZoom, 0.5);
+            updateTransform();
+        }
+
+        function resetView() {
+            currentZoom = 1;
+            translateX = 0;
+            translateY = 0;
+            updateTransform();
+        }
+
+        function setView(view) {
+            currentView = view;
+            
+            // Hide all overlays
+            document.getElementById('materialFlow').style.display = 'none';
+            document.getElementById('hvacFlow').style.display = 'none';
+            
+            // Update button states
+            document.querySelectorAll('.view-toggle button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show appropriate overlay
+            switch(view) {
+                case 'flow':
+                    document.getElementById('materialFlow').style.display = 'block';
+                    break;
+                case 'hvac':
+                    document.getElementById('hvacFlow').style.display = 'block';
+                    break;
+                case 'status':
+                    highlightEquipmentStatus();
+                    break;
+            }
+        }
+
+        function toggleAnimation() {
+            animationRunning = !animationRunning;
+            const particles = document.querySelectorAll('.airflow-particle');
+            particles.forEach(particle => {
+                if (animationRunning) {
+                    particle.style.animationPlayState = 'running';
+                } else {
+                    particle.style.animationPlayState = 'paused';
+                }
+            });
+        }
+
+        function showEquipmentDetails(equipmentId) {
+            const popup = document.getElementById('equipmentPopup');
+            const data = equipmentData[equipmentId];
+            
+            if (!data) return;
+            
+            document.getElementById('equipmentName').textContent = data.name;
+            document.getElementById('equipmentStatus').textContent = data.status;
+            document.getElementById('equipmentTemp').textContent = data.temp;
+            document.getElementById('equipmentUtilization').textContent = data.utilization;
+            document.getElementById('equipmentMaintenance').textContent = data.maintenance;
+            
+            // Position popup near the clicked equipment
+            popup.style.display = 'block';
+            popup.style.left = (event.pageX + 10) + 'px';
+            popup.style.top = (event.pageY - popup.offsetHeight / 2) + 'px';
+            
+            // Update status color
+            const statusElement = document.getElementById('equipmentStatus');
+            statusElement.style.color = data.status === 'פעיל' ? '#27ae60' : 
+                                       data.status === 'תחזוקה' ? '#e74c3c' : '#f39c12';
+        }
+
+        function closeEquipmentPopup() {
+            document.getElementById('equipmentPopup').style.display = 'none';
+        }
+
+        function highlightEquipmentStatus() {
+            const equipment = document.querySelectorAll('.equipment');
+            equipment.forEach(eq => {
+                // Add status indicators
+                const circle = eq.querySelector('circle, rect');
+                if (circle) {
+                    const id = eq.getAttribute('onclick').match(/'([^']+)'/)[1];
+                    const data = equipmentData[id];
+                    if (data) {
+                        if (data.status === 'פעיל') {
+                            circle.style.fill = '#d4edda';
+                            circle.style.stroke = '#27ae60';
+                        } else if (data.status === 'תחזוקה') {
+                            circle.style.fill = '#f8d7da';
+                            circle.style.stroke = '#e74c3c';
+                        } else {
+                            circle.style.fill = '#fff3cd';
+                            circle.style.stroke = '#f39c12';
+                        }
+                    }
+                }
+            });
+        }
+
+        // Simulate real-time updates
+        setInterval(() => {
+            // Update batch progress
+            const progress = document.getElementById('batchProgress');
+            let currentProgress = parseInt(progress.textContent);
+            currentProgress = (currentProgress + Math.random() * 2) % 100;
+            progress.textContent = Math.round(currentProgress);
+            
+            // Update active equipment count
+            const activeCount = 9 + Math.floor(Math.random() * 5);
+            document.getElementById('activeEquipment').textContent = activeCount;
+            
+            // Update environmental values with slight variations
+            const tempElements = document.querySelectorAll('.metric-value');
+            tempElements.forEach(el => {
+                if (el.textContent.includes('°C')) {
+                    const baseTemp = 22.5;
+                    const variation = (Math.random() - 0.5) * 2;
+                    el.innerHTML = (baseTemp + variation).toFixed(1) + '°C';
+                } else if (el.textContent.includes('%') && !el.textContent.includes('/')) {
+                    const baseHumidity = 45;
+                    const variation = (Math.random() - 0.5) * 5;
+                    el.innerHTML = Math.round(baseHumidity + variation) + '%';
+                }
+            });
+        }, 3000);
+
+        // Close popup when clicking outside
+        document.addEventListener('click', (e) => {
+            const popup = document.getElementById('equipmentPopup');
+            if (!popup.contains(e.target) && !e.target.closest('.equipment')) {
+                closeEquipmentPopup();
+            }
+        });
+    </script>
+</body>
+</html>
