@@ -1,0 +1,617 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AID COSMETICS - Realistic Production Floor Layout</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --scale: 2; /* 1 pixel = 0.5 meter */
+            --high-pressure: #d4f1d4;
+            --high-pressure-border: #228b22;
+            --medium-pressure: #ffe4e1;
+            --medium-pressure-border: #cd5c5c;
+            --positive-pressure: #fffacd;
+            --positive-pressure-border: #daa520;
+            --neutral-pressure: #f5f5f5;
+            --neutral-pressure-border: #a9a9a9;
+            --airlock-color: #add8e6;
+            --airlock-border: #4682b4;
+            --lab-color: #e6e6fa;
+            --lab-border: #9370db;
+            --hazard-color: #ffebcd;
+            --hazard-border: #ff6347;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #f0f0f0;
+            margin: 0;
+            padding: 0;
+        }
+
+        .main-header {
+            background: linear-gradient(90deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .floor-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px auto;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: auto;
+            max-width: 1400px;
+        }
+
+        #floorLayout {
+            width: 100%;
+            height: 800px;
+            border: 1px solid #ddd;
+            background: #fafafa;
+        }
+
+        .room {
+            stroke-width: 1.5;
+            opacity: 0.85;
+            transition: opacity 0.2s;
+            cursor: pointer;
+        }
+
+        .room:hover {
+            opacity: 1;
+            stroke-width: 2.5;
+        }
+
+        .room-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-anchor: middle;
+            fill: #2c3e50;
+            pointer-events: none;
+        }
+
+        .room-details {
+            font-size: 10px;
+            text-anchor: middle;
+            fill: #555;
+            pointer-events: none;
+        }
+
+        .room-number {
+            font-size: 9px;
+            font-weight: bold;
+            fill: #666;
+        }
+
+        .pressure-text {
+            font-size: 11px;
+            font-weight: bold;
+            text-anchor: middle;
+        }
+
+        .door {
+            stroke: #8b4513;
+            stroke-width: 3;
+            fill: none;
+        }
+
+        .window {
+            stroke: #4682b4;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .equipment-icon {
+            fill: #fff;
+            stroke: #333;
+            stroke-width: 1.5;
+        }
+
+        .equipment-label {
+            font-size: 8px;
+            text-anchor: middle;
+            fill: #333;
+        }
+
+        .flow-arrow {
+            stroke: #ff6347;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 5, 3;
+            opacity: 0.7;
+            animation: flow 3s linear infinite;
+        }
+
+        @keyframes flow {
+            from { stroke-dashoffset: 0; }
+            to { stroke-dashoffset: -8; }
+        }
+
+        .status-card {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 15px;
+            margin: 10px 0;
+        }
+
+        .metric-display {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .metric-display:last-child {
+            border-bottom: none;
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .metric-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-top: 20px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .legend-box {
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            border: 1.5px solid;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .btn-control {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-control:hover {
+            background: #f0f0f0;
+        }
+
+        .btn-control.active {
+            background: #2c3e50;
+            color: white;
+        }
+
+        @media print {
+            .control-buttons { display: none; }
+            .main-header { print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <h1 class="h4 mb-0">
+                <i class="bi bi-building"></i> Realistic Production Floor - 750m² Facility
+            </h1>
+            <p class="mb-0 mt-1 small">ISO 22716 Compliant Cosmetics Manufacturing</p>
+        </div>
+    </header>
+
+    <!-- Main Layout -->
+    <div class="container-fluid mt-3">
+        <div class="floor-container">
+            <!-- Control Buttons -->
+            <div class="control-buttons">
+                <button class="btn-control active" onclick="showView('layout')">Floor Layout</button>
+                <button class="btn-control" onclick="showView('pressure')">Pressure Map</button>
+                <button class="btn-control" onclick="showView('flow')">Material Flow</button>
+                <button class="btn-control" onclick="showView('equipment')">Equipment</button>
+                <button class="btn-control" onclick="window.print()">
+                    <i class="bi bi-printer"></i> Print
+                </button>
+            </div>
+
+            <!-- SVG Floor Plan -->
+            <svg id="floorLayout" viewBox="0 0 1200 800">
+                <defs>
+                    <!-- Grid Pattern -->
+                    <pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse">
+                        <path d="M 50 0 L 0 0 0 50" fill="none" stroke="#f0f0f0" stroke-width="0.5"/>
+                    </pattern>
+                    
+                    <!-- Arrow Marker -->
+                    <marker id="arrow" markerWidth="10" markerHeight="7" 
+                            refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#ff6347" />
+                    </marker>
+                </defs>
+
+                <!-- Background Grid -->
+                <rect width="1200" height="800" fill="url(#grid)" />
+
+                <!-- Main Building Outline -->
+                <rect x="50" y="50" width="1100" height="700" 
+                      fill="none" stroke="#333" stroke-width="2" />
+
+                <!-- ENTRANCE AREA -->
+                <g id="entrance-area">
+                    <rect x="50" y="50" width="200" height="100" 
+                          class="room" fill="var(--neutral-pressure)" 
+                          stroke="var(--neutral-pressure-border)" />
+                    <text x="150" y="95" class="room-label">ENTRANCE</text>
+                    <text x="150" y="110" class="room-details">Room 294 • 17m²</text>
+                    <text x="150" y="125" class="pressure-text" fill="#666">0 Pa</text>
+                    <!-- Main door -->
+                    <line x1="140" y1="50" x2="160" y2="50" class="door" />
+                </g>
+
+                <!-- GOWNING AREA & AIRLOCKS -->
+                <g id="airlocks">
+                    <rect x="250" y="50" width="80" height="100" 
+                          class="room" fill="var(--airlock-color)" 
+                          stroke="var(--airlock-border)" />
+                    <text x="290" y="95" class="room-label">AIRLOCK 1</text>
+                    <text x="290" y="110" class="room-details">Room 301</text>
+                    <text x="290" y="125" class="pressure-text" fill="#4682b4">+25 Pa</text>
+                    
+                    <rect x="330" y="50" width="80" height="100" 
+                          class="room" fill="var(--airlock-color)" 
+                          stroke="var(--airlock-border)" />
+                    <text x="370" y="95" class="room-label">AIRLOCK 2</text>
+                    <text x="370" y="110" class="room-details">Room 302</text>
+                    <text x="370" y="125" class="pressure-text" fill="#4682b4">+25 Pa</text>
+                </g>
+
+                <!-- MAIN PRODUCTION AREA (Room 30) -->
+                <g id="production-main">
+                    <rect x="410" y="50" width="350" height="250" 
+                          class="room" fill="var(--high-pressure)" 
+                          stroke="var(--high-pressure-border)" />
+                    <text x="585" y="160" class="room-label" font-size="14">PRODUCTION/MILLING</text>
+                    <text x="585" y="180" class="room-details">Room 30 • 29m² • ISO 7</text>
+                    <text x="585" y="200" class="pressure-text" fill="#228b22" font-size="12">+30 Pa</text>
+                    
+                    <!-- Equipment in production -->
+                    <circle cx="500" cy="120" r="25" class="equipment-icon" />
+                    <text x="500" y="125" class="equipment-label">MILL-1</text>
+                    
+                    <circle cx="600" cy="120" r="20" class="equipment-icon" />
+                    <text x="600" y="125" class="equipment-label">MILL-2</text>
+                    
+                    <rect x="650" y="100" width="40" height="40" rx="5" class="equipment-icon" />
+                    <text x="670" y="125" class="equipment-label">HOMO</text>
+                </g>
+
+                <!-- WEIGHING AREA (Room 07) -->
+                <g id="weighing">
+                    <rect x="760" y="50" width="200" height="150" 
+                          class="room" fill="var(--medium-pressure)" 
+                          stroke="var(--medium-pressure-border)" />
+                    <text x="860" y="115" class="room-label">WEIGHING</text>
+                    <text x="860" y="130" class="room-details">Room 07 • 13.8m² • ISO 8</text>
+                    <text x="860" y="145" class="pressure-text" fill="#cd5c5c">+15 Pa</text>
+                    
+                    <!-- Scales -->
+                    <rect x="820" y="80" width="30" height="30" class="equipment-icon" />
+                    <text x="835" y="100" class="equipment-label">SCALE</text>
+                </g>
+
+                <!-- DISPERSING AREA (Room 298) -->
+                <g id="dispersing">
+                    <rect x="960" y="50" width="190" height="150" 
+                          class="room" fill="var(--medium-pressure)" 
+                          stroke="var(--medium-pressure-border)" />
+                    <text x="1055" y="115" class="room-label">DISPERSING</text>
+                    <text x="1055" y="130" class="room-details">Room 298 • 17m² • ISO 8</text>
+                    <text x="1055" y="145" class="pressure-text" fill="#cd5c5c">+15 Pa</text>
+                    
+                    <!-- Disperser -->
+                    <circle cx="1055" cy="85" r="20" class="equipment-icon" />
+                    <text x="1055" y="90" class="equipment-label">DISP</text>
+                </g>
+
+                <!-- EXTRACTION/WEIGHING (Room 06) -->
+                <g id="extraction">
+                    <rect x="410" y="300" width="350" height="150" 
+                          class="room" fill="var(--medium-pressure)" 
+                          stroke="var(--medium-pressure-border)" />
+                    <text x="585" y="365" class="room-label">EXTRACTION/WEIGHING</text>
+                    <text x="585" y="380" class="room-details">Room 06 • 25.3m² • ISO 8</text>
+                    <text x="585" y="395" class="pressure-text" fill="#cd5c5c">+15 Pa</text>
+                </g>
+
+                <!-- EMULSION AREA (Room 05) -->
+                <g id="emulsion">
+                    <rect x="760" y="200" width="190" height="100" 
+                          class="room" fill="var(--medium-pressure)" 
+                          stroke="var(--medium-pressure-border)" />
+                    <text x="855" y="240" class="room-label">EMULSION</text>
+                    <text x="855" y="255" class="room-details">Room 05 • 10m²</text>
+                    <text x="855" y="270" class="pressure-text" fill="#cd5c5c">+15 Pa</text>
+                </g>
+
+                <!-- CREAM/LOTION (Room 29) -->
+                <g id="cream">
+                    <rect x="950" y="200" width="200" height="100" 
+                          class="room" fill="var(--medium-pressure)" 
+                          stroke="var(--medium-pressure-border)" />
+                    <text x="1050" y="240" class="room-label">CREAM/LOTION</text>
+                    <text x="1050" y="255" class="room-details">Room 29 • 6.3m²</text>
+                    <text x="1050" y="270" class="pressure-text" fill="#cd5c5c">+15 Pa</text>
+                </g>
+
+                <!-- RAW MATERIALS WAREHOUSE (Room 13) -->
+                <g id="raw-materials">
+                    <rect x="50" y="450" width="250" height="150" 
+                          class="room" fill="var(--positive-pressure)" 
+                          stroke="var(--positive-pressure-border)" />
+                    <text x="175" y="515" class="room-label">RAW MATERIALS</text>
+                    <text x="175" y="530" class="room-details">Room 13 • 12m²</text>
+                    <text x="175" y="545" class="pressure-text" fill="#daa520">+5 Pa</text>
+                </g>
+
+                <!-- PACKAGING MATERIALS (Room 14) -->
+                <g id="packaging-materials">
+                    <rect x="300" y="450" width="250" height="150" 
+                          class="room" fill="var(--positive-pressure)" 
+                          stroke="var(--positive-pressure-border)" />
+                    <text x="425" y="515" class="room-label">PACKAGING MATERIALS</text>
+                    <text x="425" y="530" class="room-details">Room 14 • 21m²</text>
+                    <text x="425" y="545" class="pressure-text" fill="#daa520">+5 Pa</text>
+                </g>
+
+                <!-- IN PROCESS STORAGE (Room 16) -->
+                <g id="in-process">
+                    <rect x="550" y="450" width="200" height="150" 
+                          class="room" fill="var(--positive-pressure)" 
+                          stroke="var(--positive-pressure-border)" />
+                    <text x="650" y="515" class="room-label">IN PROCESS</text>
+                    <text x="650" y="530" class="room-details">Room 16 • 7m²</text>
+                    <text x="650" y="545" class="pressure-text" fill="#daa520">+5 Pa</text>
+                </g>
+
+                <!-- FINISHED PRODUCTS (Room 18) -->
+                <g id="finished-products">
+                    <rect x="750" y="450" width="200" height="150" 
+                          class="room" fill="var(--positive-pressure)" 
+                          stroke="var(--positive-pressure-border)" />
+                    <text x="850" y="515" class="room-label">FINISHED PRODUCTS</text>
+                    <text x="850" y="530" class="room-details">Room 18 • 10m²</text>
+                    <text x="850" y="545" class="pressure-text" fill="#daa520">+5 Pa</text>
+                </g>
+
+                <!-- LABORATORY (Room 19) -->
+                <g id="laboratory">
+                    <rect x="950" y="450" width="200" height="150" 
+                          class="room" fill="var(--lab-color)" 
+                          stroke="var(--lab-border)" />
+                    <text x="1050" y="515" class="room-label">LABORATORY</text>
+                    <text x="1050" y="530" class="room-details">Room 19 • 26m²</text>
+                    <text x="1050" y="545" class="pressure-text" fill="#666">0 Pa</text>
+                    
+                    <!-- Lab equipment -->
+                    <rect x="1000" y="480" width="25" height="25" class="equipment-icon" />
+                    <text x="1012" y="497" class="equipment-label">pH</text>
+                    
+                    <rect x="1050" y="480" width="25" height="25" class="equipment-icon" />
+                    <text x="1062" y="497" class="equipment-label">VISC</text>
+                </g>
+
+                <!-- ETHANOL STORAGE (Room 21) -->
+                <g id="ethanol">
+                    <rect x="50" y="600" width="300" height="150" 
+                          class="room" fill="var(--hazard-color)" 
+                          stroke="var(--hazard-border)" />
+                    <text x="200" y="665" class="room-label">ETHANOL STORAGE</text>
+                    <text x="200" y="680" class="room-details">Room 21 • 35m² • HAZARDOUS</text>
+                    <text x="200" y="695" class="pressure-text" fill="#ff6347">-5 Pa</text>
+                    <!-- Hazard symbol -->
+                    <text x="200" y="720" font-size="20" text-anchor="middle">⚠️</text>
+                </g>
+
+                <!-- GATHERING/PACKING (Room 17) -->
+                <g id="gathering">
+                    <rect x="350" y="600" width="400" height="150" 
+                          class="room" fill="var(--positive-pressure)" 
+                          stroke="var(--positive-pressure-border)" />
+                    <text x="550" y="665" class="room-label">GATHERING/PACKING</text>
+                    <text x="550" y="680" class="room-details">Room 17 • 28m²</text>
+                    <text x="550" y="695" class="pressure-text" fill="#daa520">+5 Pa</text>
+                </g>
+
+                <!-- Material Flow Arrows (hidden by default) -->
+                <g id="material-flow" style="display: none;">
+                    <!-- Raw materials to weighing -->
+                    <path d="M 175 450 L 175 350 L 860 350 L 860 200" 
+                          class="flow-arrow" marker-end="url(#arrow)" />
+                    <!-- Weighing to production -->
+                    <path d="M 760 125 L 585 125" 
+                          class="flow-arrow" marker-end="url(#arrow)" />
+                    <!-- Production to dispersing -->
+                    <path d="M 585 175 L 1055 175 L 1055 150" 
+                          class="flow-arrow" marker-end="url(#arrow)" />
+                    <!-- To finished products -->
+                    <path d="M 585 375 L 585 525 L 750 525" 
+                          class="flow-arrow" marker-end="url(#arrow)" />
+                </g>
+
+                <!-- Pressure Gradient Overlay (hidden by default) -->
+                <g id="pressure-overlay" style="display: none; opacity: 0.3;">
+                    <rect x="410" y="50" width="350" height="250" fill="green" />
+                    <rect x="760" y="50" width="390" height="250" fill="pink" />
+                    <rect x="50" y="450" width="900" height="150" fill="yellow" />
+                    <rect x="50" y="600" width="300" height="150" fill="orange" />
+                </g>
+            </svg>
+
+            <!-- Status Dashboard -->
+            <div class="row mt-3">
+                <div class="col-md-4">
+                    <div class="status-card">
+                        <h6>Environmental Conditions</h6>
+                        <div class="metric-display">
+                            <span class="metric-label">Temperature:</span>
+                            <span class="metric-value" id="temp">22.5°C</span>
+                        </div>
+                        <div class="metric-display">
+                            <span class="metric-label">Humidity:</span>
+                            <span class="metric-value" id="humidity">55%</span>
+                        </div>
+                        <div class="metric-display">
+                            <span class="metric-label">Particle Count:</span>
+                            <span class="metric-value" id="particles">3,520/m³</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="status-card">
+                        <h6>Pressure Cascade</h6>
+                        <div class="metric-display">
+                            <span class="metric-label">Production:</span>
+                            <span class="metric-value" style="color: #228b22;">+30 Pa ✓</span>
+                        </div>
+                        <div class="metric-display">
+                            <span class="metric-label">Processing:</span>
+                            <span class="metric-value" style="color: #cd5c5c;">+15 Pa ✓</span>
+                        </div>
+                        <div class="metric-display">
+                            <span class="metric-label">Storage:</span>
+                            <span class="metric-value" style="color: #daa520;">+5 Pa ✓</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="status-card">
+                        <h6>Production Status</h6>
+                        <div class="metric-display">
+                            <span class="metric-label">Active Equipment:</span>
+                            <span class="metric-value">8/10</span>
+                        </div>
+                        <div class="metric-display">
+                            <span class="metric-label">Current Batch:</span>
+                            <span class="metric-value">LOT-2024-045</span>
+                        </div>
+                        <div class="metric-display">
+                            <span class="metric-label">Efficiency:</span>
+                            <span class="metric-value">92%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Legend -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box" style="background: var(--high-pressure); border-color: var(--high-pressure-border);"></div>
+                    <span>ISO 7 (+30 Pa)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: var(--medium-pressure); border-color: var(--medium-pressure-border);"></div>
+                    <span>ISO 8 (+15 Pa)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: var(--positive-pressure); border-color: var(--positive-pressure-border);"></div>
+                    <span>Storage (+5 Pa)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: var(--airlock-color); border-color: var(--airlock-border);"></div>
+                    <span>Airlocks (+25 Pa)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: var(--neutral-pressure); border-color: var(--neutral-pressure-border);"></div>
+                    <span>Neutral (0 Pa)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box" style="background: var(--hazard-color); border-color: var(--hazard-border);"></div>
+                    <span>Hazardous (-5 Pa)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function showView(view) {
+            // Reset all overlays
+            document.getElementById('material-flow').style.display = 'none';
+            document.getElementById('pressure-overlay').style.display = 'none';
+            
+            // Update button states
+            document.querySelectorAll('.btn-control').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show selected view
+            switch(view) {
+                case 'flow':
+                    document.getElementById('material-flow').style.display = 'block';
+                    break;
+                case 'pressure':
+                    document.getElementById('pressure-overlay').style.display = 'block';
+                    break;
+                case 'equipment':
+                    // Highlight equipment
+                    document.querySelectorAll('.equipment-icon').forEach(eq => {
+                        eq.style.fill = '#ffeb3b';
+                        eq.style.strokeWidth = '2';
+                    });
+                    setTimeout(() => {
+                        document.querySelectorAll('.equipment-icon').forEach(eq => {
+                            eq.style.fill = '#fff';
+                            eq.style.strokeWidth = '1.5';
+                        });
+                    }, 2000);
+                    break;
+            }
+        }
+
+        // Update metrics every 3 seconds
+        setInterval(() => {
+            document.getElementById('temp').textContent = (22 + Math.random() * 1).toFixed(1) + '°C';
+            document.getElementById('humidity').textContent = Math.round(53 + Math.random() * 4) + '%';
+            document.getElementById('particles').textContent = Math.round(3200 + Math.random() * 500).toLocaleString() + '/m³';
+        }, 3000);
+
+        // Add click handlers to rooms
+        document.querySelectorAll('.room').forEach(room => {
+            room.addEventListener('click', function(e) {
+                const roomLabel = this.parentElement.querySelector('.room-label').textContent;
+                const roomDetails = this.parentElement.querySelector('.room-details').textContent;
+                console.log(`Clicked: ${roomLabel} - ${roomDetails}`);
+            });
+        });
+    </script>
+</body>
+</html>
