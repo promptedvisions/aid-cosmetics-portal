@@ -1,0 +1,580 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AID COSMETICS - Blueprint Digital Twin - Pressure Cascade Layout</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        :root {
+            --high-pressure: #90ee90;
+            --high-pressure-border: #006400;
+            --medium-pressure: #ffb6c1;
+            --medium-pressure-border: #dc143c;
+            --positive-pressure: #ffffe0;
+            --positive-pressure-border: #ffd700;
+            --neutral-pressure: #ffffff;
+            --neutral-pressure-border: #999999;
+            --airlock-color: #87ceeb;
+            --airlock-border: #4682b4;
+            --lab-color: #dda0dd;
+            --lab-border: #8b008b;
+            --hazard-color: #ffa500;
+            --hazard-border: #ff4500;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+        }
+
+        .main-header {
+            background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+            color: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .control-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .floor-container {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            position: relative;
+            overflow: auto;
+        }
+
+        #blueprintPlan {
+            width: 100%;
+            min-width: 800px;
+            height: 700px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            background: #f8f9fa;
+        }
+
+        .room {
+            stroke-width: 2;
+            opacity: 0.9;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .room:hover {
+            opacity: 1;
+            stroke-width: 3;
+            filter: brightness(1.1);
+        }
+
+        /* Room classes based on pressure zones */
+        .iso7 { fill: var(--high-pressure); stroke: var(--high-pressure-border); }
+        .iso8 { fill: var(--medium-pressure); stroke: var(--medium-pressure-border); }
+        .controlled { fill: var(--positive-pressure); stroke: var(--positive-pressure-border); }
+        .uncontrolled { fill: var(--neutral-pressure); stroke: var(--neutral-pressure-border); }
+        .airlock { fill: var(--airlock-color); stroke: var(--airlock-border); }
+        .lab { fill: var(--lab-color); stroke: var(--lab-border); }
+        .hazard { fill: var(--hazard-color); stroke: var(--hazard-border); }
+
+        .room-label {
+            font-size: 11px;
+            font-weight: bold;
+            text-anchor: middle;
+            fill: #333;
+            pointer-events: none;
+        }
+
+        .room-area {
+            font-size: 9px;
+            text-anchor: middle;
+            fill: #666;
+            pointer-events: none;
+        }
+
+        .room-pressure {
+            font-size: 10px;
+            font-weight: bold;
+            text-anchor: middle;
+            pointer-events: none;
+        }
+
+        .room-number {
+            font-size: 10px;
+            font-weight: bold;
+            fill: #333;
+        }
+
+        .equipment {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .equipment:hover {
+            transform: scale(1.1);
+        }
+
+        .pressure-arrow {
+            stroke: #333;
+            stroke-width: 2;
+            fill: none;
+            stroke-dasharray: 5, 5;
+            animation: flow 2s linear infinite;
+        }
+
+        @keyframes flow {
+            from {
+                stroke-dashoffset: 0;
+            }
+            to {
+                stroke-dashoffset: -10;
+            }
+        }
+
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-left: 5px;
+            animation: pulse 2s infinite;
+        }
+
+        .status-running { background: #27ae60; }
+        .status-idle { background: #f39c12; }
+        .status-maintenance { background: #e74c3c; }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 currentColor; }
+            70% { box-shadow: 0 0 0 10px transparent; }
+            100% { box-shadow: 0 0 0 0 transparent; }
+        }
+
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .metric-item {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            border-right: 3px solid var(--primary-color);
+        }
+
+        .metric-label {
+            color: #666;
+            font-size: 11px;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .pressure-cascade {
+            background: #f8f9fa;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin: 5px 10px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-left: 5px;
+            border: 1px solid #333;
+        }
+
+        .equipment-status {
+            position: absolute;
+            background: white;
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+            min-width: 250px;
+        }
+
+        @media print {
+            .control-panel { display: none; }
+            .main-header { print-color-adjust: exact; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="main-header">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <h1 class="mb-0">
+                        <i class="bi bi-diagram-3"></i> Blueprint Digital Twin - Pressure Cascade
+                    </h1>
+                    <p class="mb-0 mt-2">ISO 22716 Compliant Cosmetics Production Facility</p>
+                </div>
+                <div class="col-md-4 text-start">
+                    <button class="btn btn-light btn-sm" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print
+                    </button>
+                    <a href="production-floor.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-grid-3x3"></i> 3D View
+                    </a>
+                    <a href="index.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-house"></i> Portal
+                    </a>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container-fluid mt-4">
+        <!-- Control Panel -->
+        <div class="control-panel">
+            <div class="row">
+                <div class="col-md-12">
+                    <h4><i class="bi bi-diagram-2"></i> Pressure Cascade Visualization</h4>
+                    <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle"></i> מערכת הלחצים מבוססת על תוכנית 194_UNV_Rev01 - Pressure Cascade לייצור קוסמטיקה לפי ISO 22716
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Floor Plan Visualization -->
+        <div class="floor-container">
+            <svg id="blueprintPlan" viewBox="0 0 800 700">
+                <defs>
+                    <!-- Arrow marker for pressure flow -->
+                    <marker id="arrowhead" markerWidth="10" markerHeight="7" 
+                            refX="9" refY="3.5" orient="auto">
+                        <polygon points="0 0, 10 3.5, 0 7" fill="#333" />
+                    </marker>
+                    <!-- Grid pattern -->
+                    <pattern id="gridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#eee" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+
+                <!-- Background grid -->
+                <rect width="800" height="700" fill="url(#gridPattern)" />
+
+                <!-- Rooms Group -->
+                <g id="roomsGroup"></g>
+
+                <!-- Equipment Group -->
+                <g id="equipmentGroup"></g>
+
+                <!-- Pressure Flow Arrows -->
+                <g id="pressureFlowGroup"></g>
+            </svg>
+
+            <!-- Equipment Status Popup -->
+            <div id="equipmentStatus" class="equipment-status">
+                <h5 id="equipmentName">Equipment</h5>
+                <div class="equipment-detail">
+                    <span>Status:</span>
+                    <span id="equipmentStatusValue">Active</span>
+                </div>
+                <button class="btn btn-sm btn-primary mt-2" onclick="closeEquipmentStatus()">Close</button>
+            </div>
+        </div>
+
+        <!-- Environmental Monitoring Dashboard -->
+        <div class="control-panel">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Environmental Monitoring - Production Area</h5>
+                    <div class="metric-grid">
+                        <div class="metric-item">
+                            <span class="metric-label">Temperature:</span>
+                            <span class="metric-value" id="temp-value">22.5°C</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Humidity:</span>
+                            <span class="metric-value" id="humidity-value">55% RH</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Room 30 Pressure:</span>
+                            <span class="metric-value text-success" id="pressure-value">+30 Pa</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Air Changes:</span>
+                            <span class="metric-value" id="air-changes">25 ACH</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">Particle Count (0.5μm):</span>
+                            <span class="metric-value" id="particle-count">3,520/m³</span>
+                        </div>
+                        <div class="metric-item">
+                            <span class="metric-label">HEPA Filter:</span>
+                            <span class="metric-value text-success">H13 ✓</span>
+                        </div>
+                    </div>
+                    <hr>
+                    <h6>Pressure Cascade Status</h6>
+                    <div class="pressure-cascade" style="font-size: 12px;">
+                        <div>Production (30 Pa) → Airlocks (25 Pa) → Storage (5 Pa) → Ambient (0 Pa)</div>
+                        <div class="text-success mt-1">✓ Cascade Maintained</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="control-panel">
+            <h5><i class="bi bi-palette"></i> Legend - Pressure Zones</h5>
+            <div class="d-flex flex-wrap">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--high-pressure)"></div>
+                    <span>High Pressure (30±5 Pa) - ISO 7</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--medium-pressure)"></div>
+                    <span>Medium Pressure (15±5 Pa) - ISO 8</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--positive-pressure)"></div>
+                    <span>Positive Pressure (5 Pa) - Storage</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--airlock-color)"></div>
+                    <span>Airlocks (25 Pa)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--neutral-pressure)"></div>
+                    <span>Neutral (0 Pa)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: var(--hazard-color)"></div>
+                    <span>Hazardous Storage (-5 Pa)</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="mt-5 py-4 bg-dark text-white">
+        <div class="container text-center">
+            <p class="mb-0">© 2024 AID COSMETICS - Blueprint-Based Digital Twin</p>
+            <p class="mb-0 mt-2">
+                <small>Based on Drawing: 194_UNV_Rev01 - Pressure Cascade</small>
+            </p>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Room definitions based on actual blueprint with pressure cascade
+        const rooms = [
+            // High Pressure Zones (30±5 Pa) - Critical Production - Green
+            {id: 'room30', x: 200, y: 100, width: 180, height: 160, class: 'iso7', label: 'Production/Milling', area: '29.0m²', pressure: 30, roomNum: '30'},
+            
+            // Medium Pressure Zones (15±5 Pa) - Pink
+            {id: 'room296', x: 50, y: 100, width: 120, height: 80, class: 'iso8', label: 'Control Room', area: '12.0m²', pressure: 15, roomNum: '296'},
+            {id: 'room297', x: 50, y: 200, width: 120, height: 60, class: 'iso8', label: 'Shutter', area: '12.5m²', pressure: 15, roomNum: '297'},
+            {id: 'room298', x: 400, y: 100, width: 140, height: 100, class: 'iso8', label: 'Dispersing', area: '17.0m²', pressure: 15, roomNum: '298'},
+            {id: 'room29', x: 400, y: 220, width: 80, height: 60, class: 'iso8', label: 'Cream/Lotion', area: '6.3m²', pressure: 15, roomNum: '29'},
+            {id: 'room05', x: 500, y: 220, width: 100, height: 80, class: 'iso8', label: 'Emulsion', area: '10.0m²', pressure: 15, roomNum: '05'},
+            {id: 'room07', x: 560, y: 100, width: 120, height: 100, class: 'iso8', label: 'Weighing', area: '13.8m²', pressure: 15, roomNum: '07'},
+            {id: 'room06', x: 200, y: 280, width: 180, height: 120, class: 'iso8', label: 'Extraction/Weighing', area: '25.3m²', pressure: 15, roomNum: '06'},
+            {id: 'room08', x: 620, y: 220, width: 60, height: 60, class: 'iso8', label: 'In Process', area: '4.0m²', pressure: 15, roomNum: '08'},
+            {id: 'room09', x: 700, y: 100, width: 60, height: 60, class: 'iso8', label: 'Adhesive', area: '4.0m²', pressure: 15, roomNum: '09'},
+            
+            // Airlocks (25 Pa) - Light Blue
+            {id: 'room301', x: 180, y: 100, width: 20, height: 60, class: 'airlock', label: 'AL', area: '3m²', pressure: 25, roomNum: '301'},
+            {id: 'room302', x: 380, y: 100, width: 20, height: 60, class: 'airlock', label: 'AL', area: '3m²', pressure: 25, roomNum: '302'},
+            {id: 'room303', x: 180, y: 180, width: 20, height: 40, class: 'airlock', label: 'WC', area: '3m²', pressure: 20, roomNum: '303'},
+            {id: 'room304', x: 380, y: 180, width: 20, height: 40, class: 'airlock', label: 'WC', area: '3m²', pressure: 20, roomNum: '304'},
+            
+            // Positive Pressure Zones - Storage - Yellow
+            {id: 'room13', x: 50, y: 320, width: 120, height: 100, class: 'controlled', label: 'Raw Materials', area: '12.0m²', pressure: 5, roomNum: '13'},
+            {id: 'room14', x: 50, y: 440, width: 160, height: 120, class: 'controlled', label: 'Packaging Materials', area: '21.0m²', pressure: 5, roomNum: '14'},
+            {id: 'room17', x: 230, y: 440, width: 200, height: 120, class: 'controlled', label: 'Gathering/Packing', area: '28.0m²', pressure: 5, roomNum: '17'},
+            {id: 'room18', x: 450, y: 440, width: 100, height: 80, class: 'controlled', label: 'Finished Product', area: '10.0m²', pressure: 5, roomNum: '18'},
+            {id: 'room16', x: 450, y: 320, width: 80, height: 60, class: 'controlled', label: 'In Process', area: '7.0m²', pressure: 5, roomNum: '16'},
+            {id: 'room15', x: 450, y: 390, width: 100, height: 40, class: 'controlled', label: 'Trading Room', area: '16.0m²', pressure: 5, roomNum: '15'},
+            {id: 'room12', x: 550, y: 320, width: 80, height: 60, class: 'controlled', label: 'Controlled Area', area: '8.0m²', pressure: 5, roomNum: '12'},
+            
+            // Neutral/Support Areas - White
+            {id: 'room294', x: 50, y: 50, width: 140, height: 40, class: 'uncontrolled', label: 'Entrance', area: '17.0m²', pressure: 0, roomNum: '294'},
+            {id: 'room19', x: 650, y: 320, width: 110, height: 140, class: 'lab', label: 'Laboratory', area: '26.0m²', pressure: 0, roomNum: '19'},
+            {id: 'room21', x: 570, y: 480, width: 190, height: 100, class: 'hazard', label: 'Ethanol Storage', area: '35.0m²', pressure: -5, roomNum: '21'}
+        ];
+
+        // Equipment definitions based on actual production areas
+        const equipment = [
+            // Production/Milling Room 30
+            {id: 'mill1', roomId: 'room30', x: 250, y: 140, type: 'mixer', name: 'Mill 1000L', status: 'running'},
+            {id: 'mill2', roomId: 'room30', x: 320, y: 180, type: 'mixer', name: 'Mill 500L', status: 'idle'},
+            
+            // Dispersing Room 298
+            {id: 'disperser', roomId: 'room298', x: 450, y: 140, type: 'homogenizer', name: 'High Speed Disperser', status: 'running'},
+            
+            // Emulsion Room 05
+            {id: 'emulsifier', roomId: 'room05', x: 540, y: 250, type: 'mixer', name: 'Emulsifier', status: 'running'},
+            
+            // Cream/Lotion Room 29
+            {id: 'cream_mixer', roomId: 'room29', x: 430, y: 240, type: 'mixer', name: 'Cream Mixer', status: 'idle'},
+            
+            // Weighing Room 07
+            {id: 'scale1', roomId: 'room07', x: 600, y: 140, type: 'lab', name: 'Precision Scale', status: 'idle'},
+            {id: 'scale2', roomId: 'room07', x: 640, y: 160, type: 'lab', name: 'Analytical Balance', status: 'idle'},
+            
+            // Laboratory Room 19
+            {id: 'ph_meter', roomId: 'room19', x: 680, y: 360, type: 'lab', name: 'pH Meter', status: 'idle'},
+            {id: 'viscometer', roomId: 'room19', x: 720, y: 400, type: 'lab', name: 'Viscometer', status: 'running'},
+            {id: 'micro_test', roomId: 'room19', x: 680, y: 420, type: 'lab', name: 'Microbiology Tester', status: 'idle'}
+        ];
+
+        // Initialize SVG
+        function initializeSVG() {
+            const svg = document.getElementById('blueprintPlan');
+            const roomsGroup = document.getElementById('roomsGroup');
+            const equipmentGroup = document.getElementById('equipmentGroup');
+            const pressureFlowGroup = document.getElementById('pressureFlowGroup');
+
+            // Draw rooms
+            rooms.forEach(room => {
+                const roomElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                roomElement.setAttribute('id', room.id);
+                roomElement.innerHTML = `
+                    <rect x="${room.x}" y="${room.y}" width="${room.width}" height="${room.height}" 
+                          class="room ${room.class}" rx="5" ry="5"/>
+                    <text x="${room.x + 5}" y="${room.y + 15}" 
+                          class="room-number">${room.roomNum || ''}</text>
+                    <text x="${room.x + room.width/2}" y="${room.y + room.height/2 - 10}" 
+                          class="room-label">${room.label}</text>
+                    <text x="${room.x + room.width/2}" y="${room.y + room.height/2 + 10}" 
+                          class="room-area">${room.area}</text>
+                    <text x="${room.x + room.width/2}" y="${room.y + room.height/2 + 30}" 
+                          class="room-pressure" style="fill: ${room.pressure >= 30 ? '#006400' : room.pressure >= 15 ? '#dc143c' : room.pressure > 0 ? '#ffd700' : '#666'}">${room.pressure > 0 ? '+' : ''}${room.pressure} Pa</text>
+                `;
+                roomsGroup.appendChild(roomElement);
+            });
+
+            // Draw equipment
+            equipment.forEach(eq => {
+                const equipmentElement = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+                equipmentElement.setAttribute('class', 'equipment');
+                equipmentElement.setAttribute('transform', `translate(${eq.x}, ${eq.y})`);
+                equipmentElement.setAttribute('onclick', `showEquipmentDetails('${eq.id}')`);
+                
+                const statusColor = eq.status === 'running' ? '#27ae60' : eq.status === 'idle' ? '#f39c12' : '#e74c3c';
+                
+                if (eq.type === 'mixer') {
+                    equipmentElement.innerHTML = `
+                        <circle r="15" fill="#fff" stroke="${statusColor}" stroke-width="2"/>
+                        <text y="5" text-anchor="middle" font-size="8">M</text>
+                    `;
+                } else if (eq.type === 'homogenizer') {
+                    equipmentElement.innerHTML = `
+                        <rect x="-15" y="-15" width="30" height="30" fill="#fff" stroke="${statusColor}" stroke-width="2" rx="5"/>
+                        <text y="5" text-anchor="middle" font-size="8">H</text>
+                    `;
+                } else if (eq.type === 'lab') {
+                    equipmentElement.innerHTML = `
+                        <rect x="-10" y="-10" width="20" height="20" fill="#fff" stroke="${statusColor}" stroke-width="2"/>
+                        <text y="5" text-anchor="middle" font-size="8">L</text>
+                    `;
+                }
+                
+                equipmentGroup.appendChild(equipmentElement);
+            });
+
+            // Draw pressure flow arrows based on actual process flow
+            const flows = [
+                // Raw materials to weighing
+                {from: {x: 110, y: 370}, to: {x: 620, y: 150}},
+                // Weighing to production
+                {from: {x: 560, y: 150}, to: {x: 380, y: 180}},
+                // Production to dispersing
+                {from: {x: 380, y: 180}, to: {x: 400, y: 150}},
+                // Dispersing to emulsion
+                {from: {x: 470, y: 200}, to: {x: 550, y: 260}},
+                // Emulsion to in-process
+                {from: {x: 550, y: 300}, to: {x: 490, y: 350}},
+                // In-process to finished goods
+                {from: {x: 490, y: 380}, to: {x: 500, y: 480}}
+            ];
+
+            flows.forEach(flow => {
+                const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                arrow.setAttribute('d', `M ${flow.from.x} ${flow.from.y} L ${flow.to.x} ${flow.to.y}`);
+                arrow.setAttribute('class', 'pressure-arrow');
+                arrow.setAttribute('marker-end', 'url(#arrowhead)');
+                pressureFlowGroup.appendChild(arrow);
+            });
+        }
+
+        // Show equipment details
+        function showEquipmentDetails(equipmentId) {
+            const eq = equipment.find(e => e.id === equipmentId);
+            if (!eq) return;
+            
+            const popup = document.getElementById('equipmentStatus');
+            document.getElementById('equipmentName').textContent = eq.name;
+            document.getElementById('equipmentStatusValue').textContent = eq.status;
+            
+            popup.style.display = 'block';
+            popup.style.left = (event.pageX + 10) + 'px';
+            popup.style.top = (event.pageY - 50) + 'px';
+        }
+
+        // Close equipment status popup
+        function closeEquipmentStatus() {
+            document.getElementById('equipmentStatus').style.display = 'none';
+        }
+
+        // Update environmental values
+        function updateEnvironmentalValues() {
+            document.getElementById('temp-value').textContent = `${(22 + Math.random() * 1.5).toFixed(1)}°C`;
+            document.getElementById('humidity-value').textContent = `${(53 + Math.random() * 4).toFixed(0)}% RH`;
+            document.getElementById('pressure-value').textContent = `+${(28 + Math.random() * 4).toFixed(0)} Pa`;
+            document.getElementById('particle-count').textContent = `${(3200 + Math.random() * 500).toFixed(0)}/m³`;
+        }
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeSVG();
+            
+            // Update environmental values every 3 seconds
+            setInterval(updateEnvironmentalValues, 3000);
+            
+            // Close popup when clicking outside
+            document.addEventListener('click', (e) => {
+                const popup = document.getElementById('equipmentStatus');
+                if (!popup.contains(e.target) && !e.target.closest('.equipment')) {
+                    closeEquipmentStatus();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
