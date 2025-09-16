@@ -1,0 +1,1120 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AID COSMETICS - 3D Production Floor Visualization</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/loaders/FontLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.159.0/examples/js/geometries/TextGeometry.js"></script>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --iso7-color: #90ee90;
+            --iso8-color: #ffb6c1;
+            --storage-color: #ffffe0;
+            --airlock-color: #87ceeb;
+            --hazard-color: #ffa500;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+        }
+
+        .control-panel {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            max-width: 350px;
+            max-height: 90vh;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+
+        .mini-map {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            width: 200px;
+            height: 200px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            padding: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+        }
+
+        .room-tooltip {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1001;
+            display: none;
+            max-width: 250px;
+        }
+
+        .metric-display {
+            background: #f8f9fa;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid var(--primary-color);
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+        }
+
+        .metric-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        .view-controls {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .view-btn {
+            flex: 1;
+            padding: 8px;
+            border: 1px solid #ddd;
+            background: white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 12px;
+        }
+
+        .view-btn:hover {
+            background: #f0f0f0;
+        }
+
+        .view-btn.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .legend {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #ddd;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            font-size: 12px;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+            border-radius: 3px;
+            border: 1px solid #333;
+        }
+
+        .loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        .loading-content {
+            text-align: center;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary-color);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .equipment-status {
+            position: absolute;
+            background: white;
+            border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            pointer-events: none;
+        }
+
+        .status-running { border-left: 3px solid #27ae60; }
+        .status-idle { border-left: 3px solid #f39c12; }
+        .status-maintenance { border-left: 3px solid #e74c3c; }
+
+        #stats {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            z-index: 999;
+        }
+
+        .particle-system {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .control-panel {
+                right: 10px;
+                top: 10px;
+                max-width: 280px;
+            }
+            
+            .mini-map {
+                width: 150px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div id="loadingScreen" class="loading-screen">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h4>Loading 3D Production Floor...</h4>
+            <p>Initializing digital twin visualization</p>
+        </div>
+    </div>
+
+    <!-- Canvas Container -->
+    <div id="canvas-container"></div>
+
+    <!-- Stats Display -->
+    <div id="stats" style="display: none;">
+        <div>FPS: <span id="fps">0</span></div>
+        <div>Objects: <span id="objects">0</span></div>
+        <div>Triangles: <span id="triangles">0</span></div>
+    </div>
+
+    <!-- Room Tooltip -->
+    <div id="roomTooltip" class="room-tooltip"></div>
+
+    <!-- Mini Map -->
+    <div class="mini-map">
+        <canvas id="miniMapCanvas" width="180" height="180"></canvas>
+    </div>
+
+    <!-- Control Panel -->
+    <div class="control-panel">
+        <h5 class="mb-3">
+            <i class="bi bi-box"></i> 3D Production Floor Control
+        </h5>
+
+        <!-- View Controls -->
+        <div class="view-controls">
+            <button class="view-btn active" onclick="setViewMode('default')">
+                <i class="bi bi-eye"></i> Default
+            </button>
+            <button class="view-btn" onclick="setViewMode('pressure')">
+                <i class="bi bi-wind"></i> Pressure
+            </button>
+            <button class="view-btn" onclick="setViewMode('flow')">
+                <i class="bi bi-arrow-repeat"></i> Flow
+            </button>
+            <button class="view-btn" onclick="setViewMode('equipment')">
+                <i class="bi bi-gear"></i> Equipment
+            </button>
+        </div>
+
+        <!-- Camera Controls -->
+        <div class="mb-3">
+            <h6>Camera Views</h6>
+            <div class="btn-group w-100" role="group">
+                <button class="btn btn-sm btn-outline-primary" onclick="setCameraView('top')">Top</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="setCameraView('front')">Front</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="setCameraView('iso')">Isometric</button>
+                <button class="btn btn-sm btn-outline-primary" onclick="setCameraView('walkthrough')">Walk</button>
+            </div>
+        </div>
+
+        <!-- Environmental Monitoring -->
+        <h6>Environmental Monitoring</h6>
+        <div class="metric-display">
+            <div class="metric-label">Temperature</div>
+            <div class="metric-value" id="temp3d">22.5°C</div>
+        </div>
+        <div class="metric-display">
+            <div class="metric-label">Humidity</div>
+            <div class="metric-value" id="humidity3d">55% RH</div>
+        </div>
+        <div class="metric-display">
+            <div class="metric-label">Differential Pressure</div>
+            <div class="metric-value" id="pressure3d">+30 Pa</div>
+        </div>
+        <div class="metric-display">
+            <div class="metric-label">Particle Count</div>
+            <div class="metric-value" id="particles3d">3,520/m³</div>
+        </div>
+
+        <!-- Production Status -->
+        <h6 class="mt-3">Production Status</h6>
+        <div class="metric-display">
+            <div class="metric-label">Current Batch</div>
+            <div class="metric-value">LOT-2024-045</div>
+        </div>
+        <div class="metric-display">
+            <div class="metric-label">Equipment Active</div>
+            <div class="metric-value">8/10</div>
+        </div>
+        <div class="metric-display">
+            <div class="metric-label">Efficiency</div>
+            <div class="metric-value">92%</div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h6>Room Classification</h6>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #90ee90;"></div>
+                <span>ISO 7 (Class C)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffb6c1;"></div>
+                <span>ISO 8 (Class D)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffffe0;"></div>
+                <span>Storage Areas</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #87ceeb;"></div>
+                <span>Airlocks</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #ffa500;"></div>
+                <span>Hazardous</span>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-3">
+            <button class="btn btn-sm btn-primary w-100" onclick="toggleAnimation()">
+                <i class="bi bi-play-circle"></i> Toggle Animation
+            </button>
+            <button class="btn btn-sm btn-secondary w-100 mt-2" onclick="resetCamera()">
+                <i class="bi bi-arrow-counterclockwise"></i> Reset View
+            </button>
+            <button class="btn btn-sm btn-info w-100 mt-2" onclick="toggleStats()">
+                <i class="bi bi-speedometer2"></i> Toggle Stats
+            </button>
+            <button class="btn btn-sm btn-success w-100 mt-2" onclick="exportView()">
+                <i class="bi bi-download"></i> Export View
+            </button>
+        </div>
+    </div>
+
+    <!-- Three.js Implementation -->
+    <script>
+        // Global variables
+        let scene, camera, renderer, controls;
+        let rooms = {};
+        let equipment = {};
+        let particles = [];
+        let animationId;
+        let currentViewMode = 'default';
+        let isAnimating = true;
+        let raycaster, mouse;
+        let selectedObject = null;
+        let roomData = {};
+
+        // Room configuration based on actual blueprint
+        const roomConfig = [
+            // Entrance
+            {id: 'R294', x: -20, z: -30, width: 10, depth: 8, height: 3, color: 0xf5f5f5, name: 'Entrance', pressure: 0},
+            
+            // Airlocks
+            {id: 'R301', x: -10, z: -30, width: 4, depth: 4, height: 3, color: 0x87ceeb, name: 'Airlock 1', pressure: 25},
+            {id: 'R302', x: -5, z: -30, width: 4, depth: 4, height: 3, color: 0x87ceeb, name: 'Airlock 2', pressure: 25},
+            
+            // Main Production (ISO 7)
+            {id: 'R30', x: 0, z: -15, width: 18, depth: 13, height: 4, color: 0x90ee90, name: 'Production/Milling', pressure: 30},
+            
+            // Secondary Production (ISO 8)
+            {id: 'R298', x: 20, z: -15, width: 10, depth: 8, height: 3.5, color: 0xffb6c1, name: 'Dispersing', pressure: 15},
+            {id: 'R07', x: 30, z: -15, width: 8, depth: 7, height: 3.5, color: 0xffb6c1, name: 'Weighing', pressure: 15},
+            {id: 'R06', x: 0, z: 0, width: 15, depth: 10, height: 3.5, color: 0xffb6c1, name: 'Extraction/Weighing', pressure: 15},
+            {id: 'R05', x: 20, z: 0, width: 8, depth: 6, height: 3.5, color: 0xffb6c1, name: 'Emulsion', pressure: 15},
+            {id: 'R29', x: 30, z: 0, width: 6, depth: 5, height: 3.5, color: 0xffb6c1, name: 'Cream/Lotion', pressure: 15},
+            
+            // Storage Areas
+            {id: 'R13', x: -20, z: 10, width: 10, depth: 8, height: 3, color: 0xffffe0, name: 'Raw Materials', pressure: 5},
+            {id: 'R14', x: -10, z: 10, width: 12, depth: 8, height: 3, color: 0xffffe0, name: 'Packaging Materials', pressure: 5},
+            {id: 'R16', x: 5, z: 10, width: 8, depth: 6, height: 3, color: 0xffffe0, name: 'In Process', pressure: 5},
+            {id: 'R18', x: 15, z: 10, width: 8, depth: 6, height: 3, color: 0xffffe0, name: 'Finished Products', pressure: 5},
+            {id: 'R17', x: 0, z: 20, width: 15, depth: 10, height: 3, color: 0xffffe0, name: 'Gathering/Packing', pressure: 5},
+            
+            // Laboratory
+            {id: 'R19', x: 25, z: 10, width: 12, depth: 10, height: 3.5, color: 0xdda0dd, name: 'Laboratory', pressure: 0},
+            
+            // Hazardous Storage
+            {id: 'R21', x: -20, z: 20, width: 15, depth: 10, height: 3, color: 0xffa500, name: 'Ethanol Storage', pressure: -5}
+        ];
+
+        // Equipment configuration
+        const equipmentConfig = [
+            {roomId: 'R30', x: -3, z: -18, type: 'mill', name: 'MILL-1000L', status: 'running'},
+            {roomId: 'R30', x: 3, z: -18, type: 'mill', name: 'MILL-500L', status: 'idle'},
+            {roomId: 'R30', x: 0, z: -12, type: 'homogenizer', name: 'Homogenizer', status: 'running'},
+            {roomId: 'R298', x: 20, z: -15, type: 'disperser', name: 'Disperser', status: 'running'},
+            {roomId: 'R07', x: 30, z: -15, type: 'scale', name: 'Scale', status: 'idle'},
+            {roomId: 'R05', x: 20, z: 0, type: 'emulsifier', name: 'Emulsifier', status: 'running'},
+            {roomId: 'R19', x: 25, z: 10, type: 'lab', name: 'pH Meter', status: 'idle'},
+            {roomId: 'R19', x: 28, z: 12, type: 'lab', name: 'Viscometer', status: 'running'}
+        ];
+
+        // Initialize Three.js
+        function init() {
+            // Scene setup
+            scene = new THREE.Scene();
+            scene.background = new THREE.Color(0xf0f0f0);
+            scene.fog = new THREE.Fog(0xf0f0f0, 50, 200);
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(
+                60,
+                window.innerWidth / window.innerHeight,
+                0.1,
+                1000
+            );
+            camera.position.set(50, 40, 50);
+            camera.lookAt(0, 0, 0);
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ 
+                antialias: true,
+                powerPreference: "high-performance"
+            });
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+            document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+            // Controls
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 10;
+            controls.maxDistance = 150;
+            controls.maxPolarAngle = Math.PI / 2;
+
+            // Raycaster for mouse interaction
+            raycaster = new THREE.Raycaster();
+            mouse = new THREE.Vector2();
+
+            // Lights
+            setupLights();
+
+            // Create facility
+            createFacility();
+
+            // Create rooms
+            createRooms();
+
+            // Create equipment
+            createEquipment();
+
+            // Create floor
+            createFloor();
+
+            // Create coordinate helpers
+            createHelpers();
+
+            // Setup event listeners
+            setupEventListeners();
+
+            // Draw mini map
+            drawMiniMap();
+
+            // Start animation
+            animate();
+
+            // Hide loading screen
+            setTimeout(() => {
+                document.getElementById('loadingScreen').style.display = 'none';
+            }, 1000);
+        }
+
+        // Setup lighting
+        function setupLights() {
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+            scene.add(ambientLight);
+
+            // Directional light (sun)
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(20, 50, 20);
+            directionalLight.castShadow = true;
+            directionalLight.shadow.camera.left = -50;
+            directionalLight.shadow.camera.right = 50;
+            directionalLight.shadow.camera.top = 50;
+            directionalLight.shadow.camera.bottom = -50;
+            directionalLight.shadow.mapSize.width = 2048;
+            directionalLight.shadow.mapSize.height = 2048;
+            scene.add(directionalLight);
+
+            // Point lights for specific areas
+            const pointLight1 = new THREE.PointLight(0x3498db, 0.5, 30);
+            pointLight1.position.set(0, 10, -15);
+            scene.add(pointLight1);
+
+            const pointLight2 = new THREE.PointLight(0xe74c3c, 0.3, 20);
+            pointLight2.position.set(-20, 10, 20);
+            scene.add(pointLight2);
+        }
+
+        // Create facility structure
+        function createFacility() {
+            // Create walls
+            const wallMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xe0e0e0,
+                side: THREE.DoubleSide
+            });
+
+            // Outer walls
+            const wallGeometry = new THREE.BoxGeometry(80, 10, 0.5);
+            
+            // North wall
+            const northWall = new THREE.Mesh(wallGeometry, wallMaterial);
+            northWall.position.set(0, 5, -35);
+            scene.add(northWall);
+
+            // South wall
+            const southWall = new THREE.Mesh(wallGeometry, wallMaterial);
+            southWall.position.set(0, 5, 35);
+            scene.add(southWall);
+
+            // East wall
+            const eastWallGeometry = new THREE.BoxGeometry(0.5, 10, 70);
+            const eastWall = new THREE.Mesh(eastWallGeometry, wallMaterial);
+            eastWall.position.set(40, 5, 0);
+            scene.add(eastWall);
+
+            // West wall
+            const westWall = new THREE.Mesh(eastWallGeometry, wallMaterial);
+            westWall.position.set(-40, 5, 0);
+            scene.add(westWall);
+
+            // Ceiling with transparency
+            const ceilingMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xffffff,
+                transparent: true,
+                opacity: 0.3
+            });
+            const ceilingGeometry = new THREE.BoxGeometry(80, 0.2, 70);
+            const ceiling = new THREE.Mesh(ceilingGeometry, ceilingMaterial);
+            ceiling.position.set(0, 10, 0);
+            scene.add(ceiling);
+        }
+
+        // Create rooms
+        function createRooms() {
+            roomConfig.forEach(config => {
+                const roomGroup = new THREE.Group();
+                
+                // Room box
+                const geometry = new THREE.BoxGeometry(config.width, config.height, config.depth);
+                const material = new THREE.MeshPhongMaterial({
+                    color: config.color,
+                    transparent: true,
+                    opacity: 0.7,
+                    emissive: config.color,
+                    emissiveIntensity: 0.1
+                });
+                
+                const room = new THREE.Mesh(geometry, material);
+                room.position.set(config.x, config.height/2, config.z);
+                room.castShadow = true;
+                room.receiveShadow = true;
+                room.userData = {
+                    id: config.id,
+                    name: config.name,
+                    pressure: config.pressure,
+                    type: 'room'
+                };
+                
+                roomGroup.add(room);
+                
+                // Room label
+                const canvas = document.createElement('canvas');
+                const context = canvas.getContext('2d');
+                canvas.width = 256;
+                canvas.height = 128;
+                
+                context.fillStyle = 'white';
+                context.fillRect(0, 0, 256, 128);
+                context.fillStyle = 'black';
+                context.font = 'bold 20px Arial';
+                context.textAlign = 'center';
+                context.fillText(config.name, 128, 40);
+                context.font = '16px Arial';
+                context.fillText(`${config.id} | ${config.pressure > 0 ? '+' : ''}${config.pressure} Pa`, 128, 70);
+                
+                const texture = new THREE.CanvasTexture(canvas);
+                const labelMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+                const labelGeometry = new THREE.PlaneGeometry(config.width * 0.8, config.width * 0.4);
+                const label = new THREE.Mesh(labelGeometry, labelMaterial);
+                label.position.set(config.x, config.height + 0.1, config.z);
+                label.rotation.x = -Math.PI / 2;
+                
+                roomGroup.add(label);
+                
+                // Add room edges
+                const edges = new THREE.EdgesGeometry(geometry);
+                const edgesMaterial = new THREE.LineBasicMaterial({ color: 0x000000, linewidth: 2 });
+                const edgesMesh = new THREE.LineSegments(edges, edgesMaterial);
+                edgesMesh.position.copy(room.position);
+                roomGroup.add(edgesMesh);
+                
+                rooms[config.id] = roomGroup;
+                scene.add(roomGroup);
+                
+                // Store room data
+                roomData[config.id] = config;
+            });
+        }
+
+        // Create equipment
+        function createEquipment() {
+            equipmentConfig.forEach(config => {
+                const equipGroup = new THREE.Group();
+                
+                // Equipment base
+                let geometry;
+                let color;
+                
+                switch(config.type) {
+                    case 'mill':
+                        geometry = new THREE.CylinderGeometry(1.5, 1.5, 3, 16);
+                        color = 0x4a90e2;
+                        break;
+                    case 'homogenizer':
+                        geometry = new THREE.BoxGeometry(2, 2.5, 2);
+                        color = 0x7b68ee;
+                        break;
+                    case 'disperser':
+                        geometry = new THREE.ConeGeometry(1.5, 3, 8);
+                        color = 0xff6b6b;
+                        break;
+                    case 'scale':
+                        geometry = new THREE.BoxGeometry(1.5, 0.5, 1.5);
+                        color = 0x4ecdc4;
+                        break;
+                    case 'emulsifier':
+                        geometry = new THREE.SphereGeometry(1.5, 16, 16);
+                        color = 0xf7b731;
+                        break;
+                    case 'lab':
+                        geometry = new THREE.BoxGeometry(1, 1.5, 1);
+                        color = 0x5f27cd;
+                        break;
+                    default:
+                        geometry = new THREE.BoxGeometry(1.5, 1.5, 1.5);
+                        color = 0x95a5a6;
+                }
+                
+                const material = new THREE.MeshPhongMaterial({
+                    color: color,
+                    emissive: color,
+                    emissiveIntensity: config.status === 'running' ? 0.3 : 0.1
+                });
+                
+                const equip = new THREE.Mesh(geometry, material);
+                equip.position.set(config.x, 1.5, config.z);
+                equip.castShadow = true;
+                equip.userData = {
+                    name: config.name,
+                    status: config.status,
+                    type: 'equipment'
+                };
+                
+                equipGroup.add(equip);
+                
+                // Status indicator
+                const indicatorGeometry = new THREE.SphereGeometry(0.3, 8, 8);
+                const indicatorColor = config.status === 'running' ? 0x00ff00 : 
+                                       config.status === 'idle' ? 0xffff00 : 0xff0000;
+                const indicatorMaterial = new THREE.MeshBasicMaterial({ 
+                    color: indicatorColor,
+                    emissive: indicatorColor,
+                    emissiveIntensity: 1
+                });
+                const indicator = new THREE.Mesh(indicatorGeometry, indicatorMaterial);
+                indicator.position.set(config.x, 3.5, config.z);
+                
+                equipGroup.add(indicator);
+                
+                equipment[config.name] = equipGroup;
+                scene.add(equipGroup);
+                
+                // Animate running equipment
+                if (config.status === 'running') {
+                    equip.userData.animate = true;
+                }
+            });
+        }
+
+        // Create floor
+        function createFloor() {
+            const floorGeometry = new THREE.PlaneGeometry(100, 80);
+            const floorMaterial = new THREE.MeshPhongMaterial({ 
+                color: 0xcccccc,
+                side: THREE.DoubleSide
+            });
+            const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+            floor.rotation.x = -Math.PI / 2;
+            floor.position.y = 0;
+            floor.receiveShadow = true;
+            scene.add(floor);
+            
+            // Grid
+            const gridHelper = new THREE.GridHelper(100, 50, 0x888888, 0xdddddd);
+            scene.add(gridHelper);
+        }
+
+        // Create helpers
+        function createHelpers() {
+            // Axes helper
+            const axesHelper = new THREE.AxesHelper(5);
+            axesHelper.position.set(-35, 0, -30);
+            scene.add(axesHelper);
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            window.addEventListener('resize', onWindowResize, false);
+            renderer.domElement.addEventListener('mousemove', onMouseMove, false);
+            renderer.domElement.addEventListener('click', onMouseClick, false);
+        }
+
+        // Window resize handler
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+        // Mouse move handler
+        function onMouseMove(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            // Update raycaster
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            const tooltip = document.getElementById('roomTooltip');
+            
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                if (object.userData.type === 'room' || object.userData.type === 'equipment') {
+                    document.body.style.cursor = 'pointer';
+                    
+                    // Show tooltip
+                    tooltip.style.display = 'block';
+                    tooltip.style.left = event.clientX + 10 + 'px';
+                    tooltip.style.top = event.clientY - 30 + 'px';
+                    
+                    if (object.userData.type === 'room') {
+                        tooltip.innerHTML = `
+                            <strong>${object.userData.name}</strong><br>
+                            Room: ${object.userData.id}<br>
+                            Pressure: ${object.userData.pressure > 0 ? '+' : ''}${object.userData.pressure} Pa
+                        `;
+                    } else {
+                        tooltip.innerHTML = `
+                            <strong>${object.userData.name}</strong><br>
+                            Status: ${object.userData.status}<br>
+                            Type: ${object.userData.type}
+                        `;
+                    }
+                } else {
+                    document.body.style.cursor = 'default';
+                    tooltip.style.display = 'none';
+                }
+            } else {
+                document.body.style.cursor = 'default';
+                tooltip.style.display = 'none';
+            }
+        }
+
+        // Mouse click handler
+        function onMouseClick(event) {
+            raycaster.setFromCamera(mouse, camera);
+            const intersects = raycaster.intersectObjects(scene.children, true);
+            
+            if (intersects.length > 0) {
+                const object = intersects[0].object;
+                if (object.userData.type === 'room') {
+                    console.log('Clicked room:', object.userData);
+                    highlightRoom(object);
+                } else if (object.userData.type === 'equipment') {
+                    console.log('Clicked equipment:', object.userData);
+                    highlightEquipment(object);
+                }
+            }
+        }
+
+        // Highlight room
+        function highlightRoom(room) {
+            // Reset previous selection
+            if (selectedObject) {
+                selectedObject.material.emissiveIntensity = 0.1;
+            }
+            
+            selectedObject = room;
+            room.material.emissiveIntensity = 0.5;
+            
+            // Update info panel
+            const roomInfo = roomData[room.userData.id];
+            if (roomInfo) {
+                document.getElementById('pressure3d').textContent = `${roomInfo.pressure > 0 ? '+' : ''}${roomInfo.pressure} Pa`;
+            }
+        }
+
+        // Highlight equipment
+        function highlightEquipment(equip) {
+            // Flash the equipment
+            const originalEmissive = equip.material.emissiveIntensity;
+            equip.material.emissiveIntensity = 1;
+            setTimeout(() => {
+                equip.material.emissiveIntensity = originalEmissive;
+            }, 500);
+        }
+
+        // Animation loop
+        function animate() {
+            animationId = requestAnimationFrame(animate);
+            
+            controls.update();
+            
+            if (isAnimating) {
+                // Rotate running equipment
+                scene.traverse((child) => {
+                    if (child.userData.animate) {
+                        child.rotation.y += 0.01;
+                    }
+                });
+                
+                // Update environmental values
+                updateEnvironmentalValues();
+            }
+            
+            // Update stats
+            updateStats();
+            
+            renderer.render(scene, camera);
+        }
+
+        // Update environmental values
+        function updateEnvironmentalValues() {
+            const time = Date.now() * 0.001;
+            
+            // Simulate value fluctuations
+            const temp = 22 + Math.sin(time * 0.5) * 0.5;
+            const humidity = 55 + Math.cos(time * 0.3) * 2;
+            const particles = 3500 + Math.sin(time * 0.7) * 200;
+            
+            document.getElementById('temp3d').textContent = `${temp.toFixed(1)}°C`;
+            document.getElementById('humidity3d').textContent = `${Math.round(humidity)}% RH`;
+            document.getElementById('particles3d').textContent = `${Math.round(particles).toLocaleString()}/m³`;
+        }
+
+        // Update stats
+        function updateStats() {
+            if (document.getElementById('stats').style.display !== 'none') {
+                document.getElementById('fps').textContent = Math.round(1000 / 16.67);
+                document.getElementById('objects').textContent = scene.children.length;
+                document.getElementById('triangles').textContent = renderer.info.render.triangles;
+            }
+        }
+
+        // Draw mini map
+        function drawMiniMap() {
+            const canvas = document.getElementById('miniMapCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            ctx.fillStyle = '#f0f0f0';
+            ctx.fillRect(0, 0, 180, 180);
+            
+            // Scale factor
+            const scale = 2;
+            const offsetX = 90;
+            const offsetY = 90;
+            
+            // Draw rooms
+            roomConfig.forEach(room => {
+                ctx.fillStyle = `#${room.color.toString(16).padStart(6, '0')}`;
+                ctx.strokeStyle = '#333';
+                ctx.lineWidth = 1;
+                
+                const x = room.x * scale + offsetX - (room.width * scale / 2);
+                const y = room.z * scale + offsetY - (room.depth * scale / 2);
+                const width = room.width * scale;
+                const height = room.depth * scale;
+                
+                ctx.fillRect(x, y, width, height);
+                ctx.strokeRect(x, y, width, height);
+                
+                // Room label
+                ctx.fillStyle = '#000';
+                ctx.font = '8px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(room.id, x + width/2, y + height/2 + 3);
+            });
+            
+            // Camera position indicator
+            ctx.fillStyle = '#ff0000';
+            ctx.beginPath();
+            ctx.arc(90, 90, 3, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        // View mode functions
+        function setViewMode(mode) {
+            currentViewMode = mode;
+            
+            // Update button states
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Apply view mode
+            switch(mode) {
+                case 'pressure':
+                    applyPressureView();
+                    break;
+                case 'flow':
+                    applyFlowView();
+                    break;
+                case 'equipment':
+                    applyEquipmentView();
+                    break;
+                default:
+                    applyDefaultView();
+            }
+        }
+
+        // Apply pressure view
+        function applyPressureView() {
+            Object.values(rooms).forEach(roomGroup => {
+                const room = roomGroup.children[0];
+                const pressure = room.userData.pressure;
+                
+                // Color based on pressure
+                let color;
+                if (pressure >= 30) color = 0x00ff00;
+                else if (pressure >= 25) color = 0x00ffff;
+                else if (pressure >= 15) color = 0xffff00;
+                else if (pressure >= 5) color = 0xffa500;
+                else if (pressure === 0) color = 0xcccccc;
+                else color = 0xff0000;
+                
+                room.material.color.setHex(color);
+                room.material.emissiveIntensity = 0.3;
+            });
+        }
+
+        // Apply flow view
+        function applyFlowView() {
+            // Create flow particles
+            createFlowParticles();
+        }
+
+        // Apply equipment view
+        function applyEquipmentView() {
+            Object.values(equipment).forEach(equipGroup => {
+                const equip = equipGroup.children[0];
+                equip.material.emissiveIntensity = 0.5;
+            });
+        }
+
+        // Apply default view
+        function applyDefaultView() {
+            // Reset room colors
+            roomConfig.forEach((config, index) => {
+                const roomGroup = Object.values(rooms)[index];
+                if (roomGroup) {
+                    const room = roomGroup.children[0];
+                    room.material.color.setHex(config.color);
+                    room.material.emissiveIntensity = 0.1;
+                }
+            });
+            
+            // Reset equipment
+            Object.values(equipment).forEach(equipGroup => {
+                const equip = equipGroup.children[0];
+                const status = equip.userData.status;
+                equip.material.emissiveIntensity = status === 'running' ? 0.3 : 0.1;
+            });
+        }
+
+        // Create flow particles
+        function createFlowParticles() {
+            // Clear existing particles
+            particles.forEach(p => scene.remove(p));
+            particles = [];
+            
+            // Create new particles
+            for (let i = 0; i < 50; i++) {
+                const geometry = new THREE.SphereGeometry(0.2, 8, 8);
+                const material = new THREE.MeshBasicMaterial({ 
+                    color: 0x3498db,
+                    transparent: true,
+                    opacity: 0.6
+                });
+                const particle = new THREE.Mesh(geometry, material);
+                
+                particle.position.set(
+                    Math.random() * 60 - 30,
+                    Math.random() * 8 + 1,
+                    Math.random() * 50 - 25
+                );
+                
+                particle.userData.velocity = new THREE.Vector3(
+                    Math.random() * 0.2 - 0.1,
+                    0,
+                    Math.random() * 0.2 - 0.1
+                );
+                
+                particles.push(particle);
+                scene.add(particle);
+            }
+        }
+
+        // Camera view functions
+        function setCameraView(view) {
+            const duration = 1000;
+            const start = Date.now();
+            const startPosition = camera.position.clone();
+            let targetPosition;
+            
+            switch(view) {
+                case 'top':
+                    targetPosition = new THREE.Vector3(0, 80, 0);
+                    break;
+                case 'front':
+                    targetPosition = new THREE.Vector3(0, 20, 60);
+                    break;
+                case 'iso':
+                    targetPosition = new THREE.Vector3(50, 40, 50);
+                    break;
+                case 'walkthrough':
+                    targetPosition = new THREE.Vector3(-30, 2, -30);
+                    break;
+            }
+            
+            function animateCamera() {
+                const elapsed = Date.now() - start;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                camera.position.lerpVectors(startPosition, targetPosition, progress);
+                camera.lookAt(0, 0, 0);
+                
+                if (progress < 1) {
+                    requestAnimationFrame(animateCamera);
+                }
+            }
+            
+            animateCamera();
+        }
+
+        // Toggle animation
+        function toggleAnimation() {
+            isAnimating = !isAnimating;
+            event.target.innerHTML = isAnimating ? 
+                '<i class="bi bi-pause-circle"></i> Pause Animation' : 
+                '<i class="bi bi-play-circle"></i> Resume Animation';
+        }
+
+        // Reset camera
+        function resetCamera() {
+            camera.position.set(50, 40, 50);
+            camera.lookAt(0, 0, 0);
+            controls.reset();
+        }
+
+        // Toggle stats
+        function toggleStats() {
+            const stats = document.getElementById('stats');
+            stats.style.display = stats.style.display === 'none' ? 'block' : 'none';
+        }
+
+        // Export view
+        function exportView() {
+            renderer.render(scene, camera);
+            const dataURL = renderer.domElement.toDataURL('image/png');
+            
+            const link = document.createElement('a');
+            link.download = 'production-floor-3d.png';
+            link.href = dataURL;
+            link.click();
+        }
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', init);
+    </script>
+</body>
+</html>
