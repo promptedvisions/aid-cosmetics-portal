@@ -1178,7 +1178,13 @@ function getDocumentContent(docId) {
     return baseContent;
 }
 
-// Export for use in documents.html
+// Make functions available globally for browser use
+if (typeof window !== 'undefined') {
+    window.documentContent = documentContent;
+    window.getDocumentContent = getDocumentContent;
+}
+
+// Export for Node.js if needed
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = { documentContent, getDocumentContent };
 }
