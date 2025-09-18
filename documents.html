@@ -444,6 +444,7 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="documents-data.js"></script>
+    <script src="documents-content.js"></script>
     <script>
         const API_BASE = 'http://localhost:5000/api';
         let currentCategory = 'all';
@@ -631,58 +632,123 @@
             const doc = documentsDatabase.getDocumentById(id);
             if (!doc) return;
 
+            // Get detailed content if available
+            const docContent = getDocumentContent(id);
+
             // Update modal title
             const modalTitle = document.querySelector('#documentModal .modal-title');
-            modalTitle.innerHTML = `${doc.title} <small class="text-muted">(${doc.id})</small>`;
+            modalTitle.innerHTML = `${docContent.title || doc.title} <small class="text-muted">(${doc.id})</small>`;
 
-            // For demonstration, show a sample PDF or document preview
+            // Show detailed content
             const viewer = document.getElementById('documentViewer');
 
-            // Create a simple document preview
             viewer.srcdoc = `
                 <!DOCTYPE html>
                 <html dir="rtl" lang="he">
                 <head>
                     <meta charset="UTF-8">
+                    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
                     <style>
                         body {
-                            font-family: Arial, sans-serif;
-                            padding: 20px;
-                            line-height: 1.6;
+                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, Arial, sans-serif;
+                            padding: 30px;
+                            line-height: 1.8;
                             direction: rtl;
+                            background: white;
                         }
                         .header {
-                            border-bottom: 2px solid #333;
-                            padding-bottom: 10px;
-                            margin-bottom: 20px;
+                            border-bottom: 3px solid #2c3e50;
+                            padding-bottom: 15px;
+                            margin-bottom: 30px;
                         }
                         .logo {
-                            font-size: 24px;
+                            font-size: 28px;
                             font-weight: bold;
                             color: #2c3e50;
+                            letter-spacing: 2px;
                         }
                         .doc-info {
                             margin: 10px 0;
                             color: #666;
+                            font-size: 14px;
                         }
-                        .content {
-                            margin: 20px 0;
-                        }
-                        .section {
-                            margin: 20px 0;
-                        }
-                        .section h2 {
+                        h1 {
                             color: #2c3e50;
-                            border-bottom: 1px solid #ddd;
-                            padding-bottom: 5px;
+                            font-size: 32px;
+                            margin: 30px 0;
+                            font-weight: 600;
+                        }
+                        h2 {
+                            color: #34495e;
+                            font-size: 24px;
+                            margin-top: 30px;
+                            margin-bottom: 15px;
+                            padding-bottom: 8px;
+                            border-bottom: 2px solid #ecf0f1;
+                        }
+                        h3 {
+                            color: #7f8c8d;
+                            font-size: 20px;
+                            margin-top: 20px;
+                            margin-bottom: 10px;
+                        }
+                        h4 {
+                            color: #95a5a6;
+                            font-size: 18px;
+                            margin-top: 15px;
+                        }
+                        p {
+                            color: #2c3e50;
+                            margin: 10px 0;
+                        }
+                        ul, ol {
+                            color: #2c3e50;
+                            margin: 10px 0;
+                            padding-right: 25px;
+                        }
+                        li {
+                            margin: 5px 0;
+                        }
+                        table {
+                            margin: 20px 0;
+                            width: 100%;
+                        }
+                        .table th {
+                            background: #ecf0f1;
+                            font-weight: 600;
+                        }
+                        .alert {
+                            margin: 20px 0;
+                            padding: 15px;
+                            border-radius: 5px;
+                        }
+                        .alert-info {
+                            background: #d1ecf1;
+                            border-right: 4px solid #3498db;
+                        }
+                        .alert-warning {
+                            background: #fff3cd;
+                            border-right: 4px solid #f39c12;
+                        }
+                        .alert-danger {
+                            background: #f8d7da;
+                            border-right: 4px solid #e74c3c;
+                        }
+                        .checklist ul {
+                            list-style-type: none;
+                            padding-right: 0;
                         }
                         .footer {
-                            margin-top: 40px;
+                            margin-top: 50px;
                             padding-top: 20px;
-                            border-top: 1px solid #ddd;
-                            color: #999;
-                            font-size: 12px;
+                            border-top: 2px solid #ecf0f1;
+                            color: #7f8c8d;
+                            font-size: 14px;
+                            text-align: center;
                         }
+                        .bg-success { background-color: #d4edda !important; }
+                        .bg-warning { background-color: #fff3cd !important; }
+                        .bg-danger { background-color: #f8d7da !important; }
                     </style>
                 </head>
                 <body>
@@ -691,43 +757,17 @@
                         <div class="doc-info">
                             <strong>מספר מסמך:</strong> ${doc.id} |
                             <strong>גרסה:</strong> ${doc.version} |
-                            <strong>תאריך:</strong> ${doc.date}
+                            <strong>תאריך:</strong> ${doc.date} |
+                            <strong>קטגוריה:</strong> ${doc.categoryName}
                         </div>
                     </div>
 
-                    <h1>${doc.title}</h1>
-
-                    <div class="content">
-                        <div class="section">
-                            <h2>1. מטרה</h2>
-                            <p>מסמך זה מגדיר את הנהלים והתהליכים הנדרשים עבור ${doc.title} במפעל AID Cosmetics בהתאם לתקן ISO 22716.</p>
-                        </div>
-
-                        <div class="section">
-                            <h2>2. תחולה</h2>
-                            <p>נוהל זה חל על כל העובדים במחלקת ${doc.categoryName} ועל כל התהליכים הקשורים.</p>
-                        </div>
-
-                        <div class="section">
-                            <h2>3. הגדרות</h2>
-                            <p>ISO 22716 - תקן בינלאומי לנוהלי ייצור נכונים (GMP) לתעשיית הקוסמטיקה</p>
-                            <p>AID Cosmetics - חברה לייצור מוצרי קוסמטיקה איכותיים</p>
-                        </div>
-
-                        <div class="section">
-                            <h2>4. אחריות</h2>
-                            <p>מנהל האיכות אחראי על יישום ובקרה של נוהל זה.</p>
-                        </div>
-
-                        <div class="section">
-                            <h2>5. תיאור התהליך</h2>
-                            <p>התהליך כולל את השלבים הבאים...</p>
-                        </div>
-                    </div>
+                    ${docContent.content || '<p>תוכן המסמך בטעינה...</p>'}
 
                     <div class="footer">
+                        <p><strong>AID COSMETICS</strong> - מערכת ניהול איכות ISO 22716</p>
                         <p>מסמך זה הינו רכושה של AID Cosmetics ומיועד לשימוש פנימי בלבד</p>
-                        <p>ISO 22716 GMP Compliant Document</p>
+                        <p>כל הזכויות שמורות © 2024</p>
                     </div>
                 </body>
                 </html>
